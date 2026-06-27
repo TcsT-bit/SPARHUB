@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>SparesHub OMNI-POS v1.0 NUCLEAR</title>
+<title>SparesHub OMNI-POS v1.0.1 HOTFIX</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -59,7 +59,7 @@ input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #374151;
 <body>
 
 <div class="header">
-  <h1>⚡ OMNI-POS v1.0 <span class="role-badge" id="roleBadge">CASHIER</span><span class="sync-dot" id="syncDot"></span></h1>
+  <h1>⚡ OMNI-POS v1.0.1 <span class="role-badge" id="roleBadge">CASHIER</span><span class="sync-dot" id="syncDot"></span></h1>
   <div>
     <button class="icon-btn" onclick="startScanner()">📷 Scan</button>
     <button class="icon-btn" onclick="toggleRole()">👤</button>
@@ -89,7 +89,6 @@ input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #374151;
   </div>
 </div>
 
-<!-- MODALS -->
 <div id="ageModal" class="modal"><div class="modal-card"><h2>🍺 TAVERN COMPLIANCE</h2><div class="warning">Customer Over 18? ID Checked?</div><button class="btn btn-green" onclick="ageConfirm(true)">YES</button><button class="btn btn-red" onclick="ageConfirm(false)">NO - CANCEL</button></div></div>
 <div id="scaleModal" class="modal"><div class="modal-card"><h2>🐔 LIVE SCALE BT</h2><div class="scale-readout" id="scaleReadout">0.00 kg</div><div class="row"><button class="btn btn-blue" onclick="connectScale()">1. Connect Scale</button></div><div class="row"><input id="kgPrice" type="number" value="28" placeholder="Price per KG"><button class="btn btn-green" onclick="addChicken()">2. ADD TO CART</button></div></div></div>
 <div id="dieselModal" class="modal"><div class="modal-card"><h2>⛽ DIESEL PUMP</h2><input id="dieselPrice" type="number" value="24.50" placeholder="Price per L"><div class="row"><button class="qty-btn" onclick="adjL(-10)">-10L</button><button class="qty-btn" onclick="adjL(-1)">-1L</button><input id="dieselL" type="number" value="0" readonly style="text-align:center;font-size:24px"><button class="qty-btn" onclick="adjL(1)">+1L</button><button class="qty-btn" onclick="adjL(10)">+10L</button></div><button class="btn btn-orange" onclick="document.getElementById('dieselL').value=5000;adjL(0)">TANKER 5000L</button><h3 id="dieselTotal">R0.00</h3><button class="btn btn-green" onclick="addDiesel()">ADD TO CART</button></div></div>
@@ -131,7 +130,7 @@ function renderModules(){let tabs=document.getElementById('moduleTabs');let p=RO
 function switchModule(m){CURRENT_MODULE=m;renderModules();}
 function renderTools(){let t=document.getElementById('moduleTools');t.innerHTML='';if(CURRENT_MODULE==='chickens')t.innerHTML=`<button class="btn btn-blue" onclick="document.getElementById('scaleModal').classList.add('active')">Connect Scale</button>`;if(CURRENT_MODULE==='diesel')t.innerHTML=`<button class="btn btn-blue" onclick="document.getElementById('dieselModal').classList.add('active')">Pump</button>`;if(CURRENT_MODULE==='transport')t.innerHTML=`<button class="btn btn-blue" onclick="openTransport()">Select Seat</button>`;}
 
-async function init(){try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();}catch(e){notify('OFFLINE ONLY');}await loadProducts();await loadStock();renderModules();setInterval(syncNow,15000);}
+async function init(){try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();}catch(e){notify('OFFLINE ONLY');}await loadProducts();await loadStock();renderModules();document.getElementById('voidBtn').disabled=!ROLE_PERMS[CURRENT_ROLE].void;setInterval(syncNow,15000);}
 
 async function loadProducts(){let local=await localforage.getItem('products');if(local){PRODUCTS=local;}else{PRODUCTS=[];for(let m in MODULES){MODULES[m].products.forEach(p=>PRODUCTS.push({...p,module:m}));}}try{let snap=await db.collection('products').get();if(!snap.empty){PRODUCTS=snap.docs.map(d=>({id:d.id,...d.data()}));}await localforage.setItem('products',PRODUCTS);document.getElementById('syncDot').classList.add('ok');}catch(e){notify('OFFLINE MODE');}}
 async function loadStock(){let local=await localforage.getItem('stock');STOCK=local||{};PRODUCTS.forEach(p=>{if(p.trackStock&&STOCK[p.sku]===undefined)STOCK[p.sku]=100;});}
@@ -155,8 +154,8 @@ function addChicken(){let kg=parseFloat(document.getElementById('scaleReadout').
 function adjL(v){let l=parseFloat(document.getElementById('dieselL').value)+v;if(l<0)l=0;document.getElementById('dieselL').value=l;let price=parseFloat(document.getElementById('dieselPrice').value);document.getElementById('dieselTotal').textContent='R'+(l*price).toFixed(2);}
 function addDiesel(){let l=parseFloat(document.getElementById('dieselL').value);if(l<=0)return;let price=parseFloat(document.getElementById('dieselPrice').value);let p=PRODUCTS.find(x=>x.sku==='DSL');pushCartItem(p,l,{litres:l});document.getElementById('dieselModal').classList.remove('active');document.getElementById('dieselL').value=0;}
 
-function openTransport(){document.getElementById('transportModal').classList.add('active');let grid=document.getElementById('seatGrid');grid.innerHTML='';for(let i=1;i<=20;i++){let taken=i%7===0;grid.innerHTML+=`<div class="seat ${taken?'taken':''}" onclick="selectSeat(${i},${taken})">${i}</div>`;}}
-function selectSeat(n,taken){if(taken)return;document.querySelectorAll('.seat').forEach(s=>s.classList.remove('selected'));event.target.classList.add('selected');SELECTED_SEAT=n;}
+function openTransport(){document.getElementById('transportModal').classList.add('active');let grid=document.getElementById('seatGrid');grid.innerHTML='';for(let i=1;i<=20;i++){let taken=i%7===0;grid.innerHTML+=`<div class="seat ${taken?'taken':''}" onclick="selectSeat(${i},${taken},this)">${i}</div>`;}}
+function selectSeat(n,taken,el){if(taken)return;document.querySelectorAll('.seat').forEach(s=>s.classList.remove('selected'));el.classList.add('selected');SELECTED_SEAT=n;}
 function addTicket(){if(!SELECTED_SEAT)return notify('Select seat');let p=PRODUCTS.find(x=>x.sku==='TICKET');pushCartItem(p,1,{seat:SELECTED_SEAT});document.getElementById('transportModal').classList.remove('active');SELECTED_SEAT=null;}
 
 function openStock(){if(!ROLE_PERMS[CURRENT_ROLE].stock)return notify('Manager only');document.getElementById('stockModal').classList.add('active');document.getElementById('stockList').innerHTML=Object.keys(STOCK).map(sku=>`<div class="row"><input value="${sku}" readonly><input type="number" id="st_${sku}" value="${STOCK[sku]}"><button class="btn btn-blue" onclick="saveStock('${sku}')">Save</button></div>`).join('');}
@@ -169,7 +168,22 @@ printReceipt(tx);deductStock();syncNow();CART=[];renderCart();notify('PAID ✓ R
 function printReceipt(tx){let doc=new jsPDF({unit:'mm',format:[80,200]});let y=8;doc.setFontSize(14);doc.text('SPARHUB OMNI-POS',40, y,{align:'center'});y+=5;doc.setFontSize(8);doc.text('Polokwane | VAT: 4590123456',40,y,{align:'center'});y+=6;tx.items.forEach(i=>{let name=i.name+(i.meta.seat?` #${i.meta.seat}`:'')+(i.meta.kg?` ${i.meta.kg}kg`:'');doc.text(name.substring(0,22),5,y);doc.text(`R${(i.price*i.qty).toFixed(2)}`,75,y,{align:'right'});y+=5;});y+=2;doc.line(5,y,75,y);y+=5;doc.setFontSize(10);doc.text(`TOTAL R${(tx.subtotal*1.15).toFixed(2)}`,5,y);window.open(doc.output('bloburl'),'_blank');}
 
 function deductStock(){CART.forEach(i=>{if(i.trackStock!==false&&i.unit!=='L'&&i.unit!=='m3'&&i.unit!=='load'&&i.unit!=='seat'&&i.unit!=='plate'){STOCK[i.sku]=(STOCK[i.sku]||0)-i.qty;}});localforage.setItem('stock',STOCK);}
-async function syncNow(){let q=await localforage.getItem('queue')||[];if(q.length===0)return;try{let batch=db.batch();q.forEach(tx=>{let ref=db.collection('transactions').doc(tx.id);batch.set(ref,{...tx,synced:true});await batch.commit();await localforage.removeItem('queue');document.getElementById('syncDot').classList.add('ok');}catch(e){document.getElementById('syncDot').classList.remove('ok');}}
+
+// FIXED: SYNCNOW HAD MISSING } AND BAD AWAIT PLACEMENT
+async function syncNow(){
+  let q=await localforage.getItem('queue')||[];
+  if(q.length===0)return;
+  try{
+    let batch=db.batch();
+    q.forEach(tx=>{let ref=db.collection('transactions').doc(tx.id);batch.set(ref,{...tx,synced:true});
+    await batch.commit(); // <-- MOVED OUTSIDE LOOP
+    await localforage.removeItem('queue');
+    document.getElementById('syncDot').classList.add('ok');
+  }catch(e){
+    console.error(e);
+    document.getElementById('syncDot').classList.remove('ok');
+  }
+}
 
 let qrScanner=null;function startScanner(){document.getElementById('qrReader').classList.add('active');qrScanner=new Html5Qrcode("qr");qrScanner.start({facingMode:"environment"},{fps:10,qrbox:250},txt=>{addToCart(txt);stopScanner();},()=>{});}
 function stopScanner(){if(qrScanner){qrScanner.stop().then(()=>qrScanner.clear());}document.getElementById('qrReader').classList.remove('active');}
