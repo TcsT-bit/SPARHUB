@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#16a34a">
 <title>SparesHub OMNI-POS v1.0 NUCLEAR</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -11,33 +10,35 @@
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
 <style>
-:root{--bg:#0a0a0a;--card:#111827;--green:#16a34a;--red:#dc2626;--blue:#3b82f6;--gold:#fbbf24;--cyan:#06b6d4}
-[data-theme="light"]{--bg:#f1f5f9;--card:#fff;color:#0a0a0a}
+:root{--bg:#0a0a0a;--card:#111827;--green:#16a34a;--red:#dc2626;--blue:#3b82f6;--gold:#fbbf24;--cyan:#06b6d4;--orange:#ea580c}
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;touch-action:manipulation}
 body{background:var(--bg);color:#f1f5f9;font-size:14px}
-.header{background:linear-gradient(135deg,#16a34a,#3b82f6);padding:12px;position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center}
-.header h1{font-size:16px}
+.header{background:linear-gradient(135deg,#16a34a,#3b82f6,#f59e0b);padding:12px;position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center}
+.header h1{font-size:16px;font-weight:800}
 .icon-btn{background:#1f2937;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;color:white;font-size:14px;font-weight:700}
 .role-badge{font-size:10px;background:var(--gold);color:#000;padding:2px 6px;border-radius:6px;font-weight:800;margin-left:6px}
+.sync-dot{width:10px;height:10px;border-radius:50%;background:var(--red);display:inline-block;margin-left:6px}
+.sync-dot.ok{background:var(--green)}
 .container{display:grid;grid-template-columns:1fr 380px;gap:12px;padding:12px;height:calc(100vh - 60px)}
 @media(max-width:900px){.container{grid-template-columns:1fr}}
-.card{background:var(--card);border-radius:12px;padding:12px;border:1px solid #1f2937}
+.card{background:var(--card);border-radius:12px;padding:12px;border:1px solid #1f2937;overflow:hidden;display:flex;flex-direction:column}
 .modules{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px}
-.mod-btn{flex:0 0 auto;padding:10px 14px;background:#1f2937;border-radius:10px;border:2px solid #374151;font-weight:800;cursor:pointer}
+.mod-btn{flex:0 0 auto;padding:10px 14px;background:#1f2937;border-radius:10px;border:2px solid #374151;font-weight:800;cursor:pointer;font-size:12px}
 .mod-btn.active{border-color:var(--green);background:var(--green);color:#000}
-.products{overflow-y:auto;height:calc(100% - 120px)}
-.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.module-tools{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.products{overflow-y:auto;flex:1}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
 .prod{background:#1f2937;padding:10px;border-radius:10px;cursor:pointer;text-align:center;border:1px solid #374151}
 .prod:active{transform:scale(0.95);background:var(--blue)}
-.prod-name{font-weight:700;font-size:12px}
+.prod-name{font-weight:700;font-size:12px;line-height:1.2}
 .prod-price{color:var(--green);font-weight:800;font-size:13px}
-.cart{overflow-y:auto;height:calc(100% - 220px)}
+.cart{overflow-y:auto;flex:1}
 .cart-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1f2937;font-size:13px}
-.cart-item button{background:var(--red);border:none;color:#fff;border-radius:6px;padding:2px 6px}
-.totals{padding:12px 0;border-top:2px solid var(--green)}
+.cart-item button{background:var(--red);border:none;color:#fff;border-radius:6px;padding:2px 6px;font-weight:800}
+.totals{padding:12px 0;border-top:2px solid var(--green);margin-top:auto}
 .total-line{display:flex;justify-content:space-between;font-weight:800;font-size:18px}
 .btn{width:100%;padding:14px;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-size:15px;margin-top:8px}
-.btn-green{background:var(--green);color:#000}.btn-red{background:var(--red);color:white}.btn-blue{background:var(--blue);color:white}
+.btn-green{background:var(--green);color:#000}.btn-red{background:var(--red);color:white}.btn-blue{background:var(--blue);color:white}.btn-orange{background:var(--orange);color:white}
 .btn:disabled{opacity:0.4;cursor:not-allowed}
 .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:999}
 .modal.active{display:flex}
@@ -45,22 +46,24 @@ body{background:var(--bg);color:#f1f5f9;font-size:14px}
 input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #374151;background:#0a0a0a;color:#f1f5f9;margin-bottom:10px;font-size:15px}
 .hidden{display:none!important}
 .notification{position:fixed;top:20px;right:20px;background:var(--green);color:#000;padding:12px;border-radius:10px;z-index:9999;display:none;font-weight:800}
-.sync-dot{width:10px;height:10px;border-radius:50%;background:var(--red);display:inline-block;margin-right:6px}
-.sync-dot.ok{background:var(--green)}
 .qty-btn{background:#374151;border:none;color:#fff;padding:10px 14px;border-radius:8px;font-size:18px;font-weight:800}
 .row{display:flex;gap:8px;align-items:center}
 .scale-readout{font-size:32px;font-weight:800;color:var(--cyan);text-align:center;padding:20px}
 .warning{background:#f59e0b;color:#000;padding:10px;border-radius:8px;font-weight:700;text-align:center}
+.seat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.seat{background:#1f2937;padding:12px;border-radius:8px;text-align:center;cursor:pointer;border:2px solid #374151}
+.seat.taken{background:#dc2626;cursor:not-allowed}
+.seat.selected{background:var(--green);color:#000}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>⚡ OMNI-POS <span class="role-badge" id="roleBadge">CASHIER</span><span class="sync-dot" id="syncDot"></span></h1>
+  <h1>⚡ OMNI-POS v1.0 <span class="role-badge" id="roleBadge">CASHIER</span><span class="sync-dot" id="syncDot"></span></h1>
   <div>
     <button class="icon-btn" onclick="startScanner()">📷 Scan</button>
     <button class="icon-btn" onclick="toggleRole()">👤</button>
-    <button class="icon-btn" onclick="openSettings()">⚙️</button>
+    <button class="icon-btn" onclick="openStock()">📦</button>
   </div>
 </div>
 
@@ -70,29 +73,32 @@ input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #374151;
 <div class="container">
   <div class="card">
     <div class="modules" id="moduleTabs"></div>
-    <div class="row" id="moduleTools"></div>
+    <div class="module-tools" id="moduleTools"></div>
     <div class="products" id="products"></div>
   </div>
   <div class="card">
-    <h3>Cart</h3>
+    <h3>Cart <span style="font-size:12px;color:var(--cyan)" id="cartMeta"></span></h3>
     <div class="cart" id="cart"></div>
     <div class="totals">
       <div class="total-line"><span>Subtotal</span><span id="subtotal">R0.00</span></div>
       <div class="total-line"><span>VAT 15%</span><span id="vat">R0.00</span></div>
       <div class="total-line"><span>TOTAL</span><span id="total">R0.00</span></div>
     </div>
-    <button class="btn btn-green" id="payBtn" onclick="pay()">PAY & PRINT</button>
-    <button class="btn btn-red" onclick="voidCart()">VOID</button>
+    <button class="btn btn-green" id="payBtn" onclick="pay()">PAY & PRINT 80mm</button>
+    <button class="btn btn-red" id="voidBtn" onclick="voidCart()">VOID</button>
   </div>
 </div>
 
-<div id="ageModal" class="modal"><div class="modal-card"><h2>🍺 TAVERN COMPLIANCE</h2><div class="warning">Customer Over 18?</div><button class="btn btn-green" onclick="ageConfirm(true)">YES</button><button class="btn btn-red" onclick="ageConfirm(false)">NO - CANCEL</button></div></div>
-<div id="scaleModal" class="modal"><div class="modal-card"><h2>🐔 LIVE SCALE</h2><div class="scale-readout" id="scaleReadout">0.00 kg</div><div class="row"><button class="btn btn-blue" onclick="connectScale()">Connect BT Scale</button></div><div class="row"><input id="kgPrice" type="number" value="28" placeholder="Price per KG"><button class="btn btn-green" onclick="addChicken()">ADD TO CART</button></div></div></div>
-<div id="dieselModal" class="modal"><div class="modal-card"><h2>⛽ DIESEL PUMP</h2><input id="dieselPrice" type="number" value="24.50" placeholder="Price per L"><div class="row"><button class="qty-btn" onclick="adjL(-10)">-10L</button><button class="qty-btn" onclick="adjL(-1)">-1L</button><input id="dieselL" type="number" value="0" readonly style="text-align:center;font-size:24px"><button class="qty-btn" onclick="adjL(1)">+1L</button><button class="qty-btn" onclick="adjL(10)">+10L</button></div><h3 id="dieselTotal">R0.00</h3><button class="btn btn-green" onclick="addDiesel()">ADD TO CART</button></div></div>
+<!-- MODALS -->
+<div id="ageModal" class="modal"><div class="modal-card"><h2>🍺 TAVERN COMPLIANCE</h2><div class="warning">Customer Over 18? ID Checked?</div><button class="btn btn-green" onclick="ageConfirm(true)">YES</button><button class="btn btn-red" onclick="ageConfirm(false)">NO - CANCEL</button></div></div>
+<div id="scaleModal" class="modal"><div class="modal-card"><h2>🐔 LIVE SCALE BT</h2><div class="scale-readout" id="scaleReadout">0.00 kg</div><div class="row"><button class="btn btn-blue" onclick="connectScale()">1. Connect Scale</button></div><div class="row"><input id="kgPrice" type="number" value="28" placeholder="Price per KG"><button class="btn btn-green" onclick="addChicken()">2. ADD TO CART</button></div></div></div>
+<div id="dieselModal" class="modal"><div class="modal-card"><h2>⛽ DIESEL PUMP</h2><input id="dieselPrice" type="number" value="24.50" placeholder="Price per L"><div class="row"><button class="qty-btn" onclick="adjL(-10)">-10L</button><button class="qty-btn" onclick="adjL(-1)">-1L</button><input id="dieselL" type="number" value="0" readonly style="text-align:center;font-size:24px"><button class="qty-btn" onclick="adjL(1)">+1L</button><button class="qty-btn" onclick="adjL(10)">+10L</button></div><button class="btn btn-orange" onclick="document.getElementById('dieselL').value=5000;adjL(0)">TANKER 5000L</button><h3 id="dieselTotal">R0.00</h3><button class="btn btn-green" onclick="addDiesel()">ADD TO CART</button></div></div>
+<div id="transportModal" class="modal"><div class="modal-card"><h2>🚌 BUS TICKET</h2><select id="busRoute"><option>Polokwane - JHB R80</option><option>Polokwane - Nelspruit R120</option></select><div class="seat-grid" id="seatGrid"></div><button class="btn btn-green" onclick="addTicket()">ADD TICKET</button></div></div>
+<div id="stockModal" class="modal"><div class="modal-card"><h2>📦 STOCK TAKE</h2><div id="stockList"></div><button class="btn btn-green" onclick="closeStock()">CLOSE</button></div></div>
 
 <script>
 const { jsPDF } = window.jspdf;
-const firebaseConfig = { // <-- PASTE YOUR KEYS HERE
+const firebaseConfig = { // <-- PASTE YOUR KEYS HERE NOW
   apiKey: "PASTE_API_KEY",
   authDomain: "PASTE_AUTH.firebaseapp.com",
   projectId: "PASTE_PROJECT_ID",
@@ -101,64 +107,75 @@ const firebaseConfig = { // <-- PASTE YOUR KEYS HERE
   appId: "PASTE_APP_ID"
 };
 
-let db, CURRENT_ROLE='cashier', CURRENT_MODULE='bricks', CART=[], PRODUCTS=[], SYNC_QUEUE=[], BT_SCALE=null, BT_CHAR=null;
+let db, CURRENT_ROLE='cashier', CURRENT_MODULE='bricks', CART=[], PRODUCTS=[], STOCK={}, SYNC_QUEUE=[], BT_SCALE=null, BT_CHAR=null, SELECTED_SEAT=null;
 const VAT_RATE=0.15;
 let PENDING_ALCOHOL_ITEM=null;
 
-const ROLE_PERMS={cashier:{name:'CASHIER',tabs:['bricks','tavern','chickens','pos'],void:false,priceChange:false,reports:false},manager:{name:'MANAGER',tabs:['bricks','tavern','chickens','sand','water','diesel','scrap','transport','restaurant','stock','reports'],void:true,priceChange:true,reports:true}};
+const ROLE_PERMS={cashier:{name:'CASHIER',tabs:['bricks','tavern','chickens','diesel','pos'],void:false,priceChange:false,reports:false,stock:false},manager:{name:'MANAGER',tabs:['bricks','tavern','chickens','diesel','sand','water','scrap','transport','restaurant','stock','reports'],void:true,priceChange:true,reports:true,stock:true}};
 
 const MODULES={
-  bricks:{name:'🧱 Bricks',products:[{sku:'B6',name:'6" Brick',price:3.20,unit:'ea',trackStock:true},{sku:'B4',name:'4" Brick',price:2.80,unit:'ea',trackStock:true}]},
-  tavern:{name:'🍺 Tavern',products:[{sku:'BEER',name:'Castle 500ml',price:22,unit:'ea',trackStock:true,alcohol:true},{sku:'BRANDY',name:'Klippies 750ml',price:185,unit:'ea',trackStock:true,alcohol:true}]},
+  bricks:{name:'🧱 Bricks',products:[{sku:'B6',name:'6" Brick',price:3.20,unit:'ea',trackStock:true},{sku:'B4',name:'4" Brick',price:2.80,unit:'ea',trackStock:true},{sku:'MAXI',name:'Maxi Brick',price:4.50,unit:'ea',trackStock:true}]},
+  tavern:{name:'🍺 Tavern',products:[{sku:'BEER',name:'Castle 500ml',price:22,unit:'ea',trackStock:true,alcohol:true},{sku:'BRANDY',name:'Klippies 750ml',price:185,unit:'ea',trackStock:true,alcohol:true},{sku:'DEP',name:'Bottle Deposit',price:5,unit:'ea',trackStock:false}]},
   chickens:{name:'🐔 Chickens',products:[{sku:'CHICK',name:'Live Chicken',price:0,unit:'kg',trackStock:true}]},
   diesel:{name:'⛽ Diesel',products:[{sku:'DSL',name:'Diesel',price:24.50,unit:'L',trackStock:false}]},
-  sand:{name:'🏜️ Sand',products:[{sku:'RIVER',name:'River Sand m³',price:450,unit:'m3',trackStock:true}]},
-  water:{name:'💧 Water',products:[{sku:'WATER25',name:'Water 25L',price:35,unit:'ea',trackStock:true}]},
-  scrap:{name:'🔩 Scrap',products:[{sku:'TYRE',name:'Used Tyre 15"',price:350,unit:'ea',trackStock:true}]},
-  transport:{name:'🚌 Transport',products:[{sku:'TICKET',name:'Polokwane Ticket',price:80,unit:'seat',trackStock:false}]},
-  restaurant:{name:'🍔 Restaurant',products:[{sku:'BURGER',name:'Burger',price:55,unit:'plate',trackStock:false}]}
+  sand:{name:'🏜️ Sand',products:[{sku:'RIVER',name:'River Sand m³',price:450,unit:'m3',trackStock:true},{sku:'TRUCK',name:'Truck Load Sand',price:1200,unit:'load',trackStock:true}]},
+  water:{name:'💧 Water',products:[{sku:'WATER25',name:'Water 25L Drum',price:35,unit:'ea',trackStock:true},{sku:'TANKER',name:'5000L Tanker',price:850,unit:'load',trackStock:false}]},
+  scrap:{name:'🔩 Scrap',products:[{sku:'TYRE15',name:'Used Tyre 15"',price:350,unit:'ea',trackStock:true,grade:'B'},{sku:'MAG',name:'Mag Rim Used',price:800,unit:'ea',trackStock:true,grade:'A'}]},
+  transport:{name:'🚌 Transport',products:[{sku:'TICKET',name:'Bus Ticket',price:80,unit:'seat',trackStock:false}]},
+  restaurant:{name:'🍔 Restaurant',products:[{sku:'BURGER',name:'Burger',price:55,unit:'plate',trackStock:false,mods:['+Cheese R5','No Onion']},{sku:'MEAL',name:'Pap + Chicken',price:65,unit:'plate',trackStock:false}]}
 };
 
 function notify(msg){let n=document.getElementById('notification');n.textContent=msg;n.style.display='block';setTimeout(()=>n.style.display='none',2500);}
-function toggleRole(){CURRENT_ROLE=CURRENT_ROLE==='cashier'?'manager':'cashier';document.getElementById('roleBadge').textContent=ROLE_PERMS[CURRENT_ROLE].name;renderModules();}
+function toggleRole(){CURRENT_ROLE=CURRENT_ROLE==='cashier'?'manager':'cashier';document.getElementById('roleBadge').textContent=ROLE_PERMS[CURRENT_ROLE].name;document.getElementById('voidBtn').disabled=!ROLE_PERMS[CURRENT_ROLE].void;renderModules();}
 function renderModules(){let tabs=document.getElementById('moduleTabs');let p=ROLE_PERMS[CURRENT_ROLE];tabs.innerHTML=p.tabs.map(m=>`<div class="mod-btn ${m===CURRENT_MODULE?'active':''}" onclick="switchModule('${m}')">${MODULES[m].name}</div>`).join('');renderProducts();renderTools();}
 function switchModule(m){CURRENT_MODULE=m;renderModules();}
-function renderTools(){let t=document.getElementById('moduleTools');t.innerHTML='';if(CURRENT_MODULE==='chickens')t.innerHTML=`<button class="btn btn-blue" onclick="document.getElementById('scaleModal').classList.add('active')">Connect Scale</button>`;if(CURRENT_MODULE==='diesel')t.innerHTML=`<button class="btn btn-blue" onclick="document.getElementById('dieselModal').classList.add('active')">Pump</button>`;}
+function renderTools(){let t=document.getElementById('moduleTools');t.innerHTML='';if(CURRENT_MODULE==='chickens')t.innerHTML=`<button class="btn btn-blue" onclick="document.getElementById('scaleModal').classList.add('active')">Connect Scale</button>`;if(CURRENT_MODULE==='diesel')t.innerHTML=`<button class="btn btn-blue" onclick="document.getElementById('dieselModal').classList.add('active')">Pump</button>`;if(CURRENT_MODULE==='transport')t.innerHTML=`<button class="btn btn-blue" onclick="openTransport()">Select Seat</button>`;}
 
-async function loadProducts(){let local=await localforage.getItem('products');if(local){PRODUCTS=local;renderProducts();}try{let snap=await db.collection('products').get();PRODUCTS=snap.docs.map(d=>({id:d.id,...d.data()}));await localforage.setItem('products',PRODUCTS);document.getElementById('syncDot').classList.add('ok');}catch(e){notify('OFFLINE MODE');}}
-function renderProducts(){let mod=MODULES[CURRENT_MODULE];let prods=PRODUCTS.filter(p=>p.module===CURRENT_MODULE);if(prods.length===0)prods=mod.products.map(x=>({...x,module:CURRENT_MODULE}));document.getElementById('products').innerHTML=`<div class="product-grid">${prods.map(p=>`<div class="prod" onclick="addToCart('${p.sku}')"><div class="prod-name">${p.name}</div><div class="prod-price">R${p.price}</div><div style="font-size:10px">${p.unit}</div></div>`).join('')}</div>`;}
+async function init(){try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();}catch(e){notify('OFFLINE ONLY');}await loadProducts();await loadStock();renderModules();setInterval(syncNow,15000);}
 
-function addToCart(sku){let p=PRODUCTS.find(x=>x.sku===sku)||MODULES[CURRENT_MODULE].products.find(x=>x.sku===sku);if(!p)return;
+async function loadProducts(){let local=await localforage.getItem('products');if(local){PRODUCTS=local;}else{PRODUCTS=[];for(let m in MODULES){MODULES[m].products.forEach(p=>PRODUCTS.push({...p,module:m}));}}try{let snap=await db.collection('products').get();if(!snap.empty){PRODUCTS=snap.docs.map(d=>({id:d.id,...d.data()}));}await localforage.setItem('products',PRODUCTS);document.getElementById('syncDot').classList.add('ok');}catch(e){notify('OFFLINE MODE');}}
+async function loadStock(){let local=await localforage.getItem('stock');STOCK=local||{};PRODUCTS.forEach(p=>{if(p.trackStock&&STOCK[p.sku]===undefined)STOCK[p.sku]=100;});}
+
+function renderProducts(){let prods=PRODUCTS.filter(p=>p.module===CURRENT_MODULE);document.getElementById('products').innerHTML=`<div class="product-grid">${prods.map(p=>`<div class="prod" onclick="addToCart('${p.sku}')"><div class="prod-name">${p.name}</div><div class="prod-price">R${p.price}</div><div style="font-size:10px;color:#6b7280">${p.unit} | ${p.trackStock?`Stock:${STOCK[p.sku]||0}`:'No Track'}</div></div>`).join('')}</div>`;}
+
+function addToCart(sku){let p=PRODUCTS.find(x=>x.sku===sku);if(!p)return;
 if(p.alcohol){PENDING_ALCOHOL_ITEM=p;document.getElementById('ageModal').classList.add('active');return;}
 if(p.sku==='CHICK'){document.getElementById('scaleModal').classList.add('active');return;}
 if(p.sku==='DSL'){document.getElementById('dieselModal').classList.add('active');return;}
+if(p.sku==='TICKET'){openTransport();return;}
 pushCartItem(p,1);}
 function ageConfirm(ok){document.getElementById('ageModal').classList.remove('active');if(ok&&PENDING_ALCOHOL_ITEM){pushCartItem(PENDING_ALCOHOL_ITEM,1);}PENDING_ALCOHOL_ITEM=null;}
-function pushCartItem(p,qty,meta={}){let ex=CART.find(i=>i.sku===p.sku&&JSON.stringify(i.meta)===JSON.stringify(meta));if(ex){ex.qty+=qty;}else{CART.push({sku:p.sku,name:p.name,price:p.price,qty,unit:p.unit,meta});}renderCart();}
-function renderCart(){document.getElementById('cart').innerHTML=CART.map((i,idx)=>`<div class="cart-item"><span>${i.name} ${i.meta.kg?` ${i.meta.kg}kg`:''} x${i.qty}</span><span>R${(i.price*i.qty).toFixed(2)} <button onclick="CART.splice(${idx},1);renderCart()">x</button></span></div>`).join('')||'<div style="color:#6b7280;text-align:center;padding:20px">Cart Empty</div>';let sub=CART.reduce((a,b)=>a+b.price*b.qty,0);let vat=sub*VAT_RATE;document.getElementById('subtotal').textContent='R'+sub.toFixed(2);document.getElementById('vat').textContent='R'+vat.toFixed(2);document.getElementById('total').textContent='R'+(sub+vat).toFixed(2);}
+function pushCartItem(p,qty,meta={}){if(p.trackStock&&STOCK[p.sku]<=0)return notify('OUT OF STOCK');let ex=CART.find(i=>i.sku===p.sku&&JSON.stringify(i.meta)===JSON.stringify(meta));if(ex){ex.qty+=qty;}else{CART.push({sku:p.sku,name:p.name,price:p.price,qty,unit:p.unit,meta});}renderCart();}
+function renderCart(){document.getElementById('cart').innerHTML=CART.map((i,idx)=>`<div class="cart-item"><span>${i.name} ${i.meta.kg?` ${i.meta.kg}kg`:''} ${i.meta.seat?`Seat:${i.meta.seat}`:''} x${i.qty}</span><span>R${(i.price*i.qty).toFixed(2)} <button onclick="CART.splice(${idx},1);renderCart()">x</button></span></div>`).join('')||'<div style="color:#6b7280;text-align:center;padding:20px">Cart Empty</div>';let sub=CART.reduce((a,b)=>a+b.price*b.qty,0);let vat=sub*VAT_RATE;document.getElementById('subtotal').textContent='R'+sub.toFixed(2);document.getElementById('vat').textContent='R'+vat.toFixed(2);document.getElementById('total').textContent='R'+(sub+vat).toFixed(2);document.getElementById('cartMeta').textContent=CART.length+' items';}
 function voidCart(){if(!ROLE_PERMS[CURRENT_ROLE].void)return notify('Manager only');CART=[];renderCart();}
 
-async function connectScale(){if(!navigator.bluetooth)return notify('Chrome Android only');try{let dev=await navigator.bluetooth.requestDevice({filters:[{namePrefix:'SCALE'}],optionalServices:['0000181d-0000-1000-8000-00805f9b34fb']});let s=await dev.gatt.connect();let sv=await s.getPrimaryService('0000181d-0000-1000-8000-00805f9b34fb');BT_CHAR=await sv.getCharacteristic('00002a9d-0000-1000-8000-00805f9b34fb');await BT_CHAR.startNotifications();BT_CHAR.addEventListener('characteristicvaluechanged',e=>{let v=new DataView(e.target.value.buffer).getFloat32(0,true);document.getElementById('scaleReadout').textContent=v.toFixed(2)+' kg';});notify('Scale Connected');}catch(e){notify('Scale Err')}}
-function addChicken(){let kg=parseFloat(document.getElementById('scaleReadout').textContent);let price=parseFloat(document.getElementById('kgPrice').value);let p=MODULES.chickens.products[0];pushCartItem(p,1,{kg,price_per_kg:price,total:kg*price});document.getElementById('scaleModal').classList.remove('active');}
+async function connectScale(){if(!navigator.bluetooth)return notify('Chrome Android only');try{let dev=await navigator.bluetooth.requestDevice({filters:[{namePrefix:'SCALE'}],optionalServices:['0000181d-0000-1000-8000-00805f9b34fb']});let s=await dev.gatt.connect();let sv=await s.getPrimaryService('0000181d-0000-1000-8000-00805f9b34fb');BT_CHAR=await sv.getCharacteristic('00002a9d-0000-1000-8000-00805f9b34fb');await BT_CHAR.startNotifications();BT_CHAR.addEventListener('characteristicvaluechanged',e=>{let v=new DataView(e.target.value.buffer).getFloat32(0,true);document.getElementById('scaleReadout').textContent=v.toFixed(2)+' kg';});notify('Scale Connected ✓');}catch(e){notify('Scale Err: '+e.message)}}
+function addChicken(){let kg=parseFloat(document.getElementById('scaleReadout').textContent);if(kg<=0)return notify('Place chicken');let price=parseFloat(document.getElementById('kgPrice').value);let p=PRODUCTS.find(x=>x.sku==='CHICK');pushCartItem(p,1,{kg,price_per_kg:price,total:kg*price});if(p.trackStock)STOCK[p.sku]=(STOCK[p.sku]||0)-1;document.getElementById('scaleModal').classList.remove('active');}
 
 function adjL(v){let l=parseFloat(document.getElementById('dieselL').value)+v;if(l<0)l=0;document.getElementById('dieselL').value=l;let price=parseFloat(document.getElementById('dieselPrice').value);document.getElementById('dieselTotal').textContent='R'+(l*price).toFixed(2);}
-function addDiesel(){let l=parseFloat(document.getElementById('dieselL').value);let price=parseFloat(document.getElementById('dieselPrice').value);let p=MODULES.diesel.products[0];pushCartItem(p,l,{litres:l});document.getElementById('dieselModal').classList.remove('active');document.getElementById('dieselL').value=0;}
+function addDiesel(){let l=parseFloat(document.getElementById('dieselL').value);if(l<=0)return;let price=parseFloat(document.getElementById('dieselPrice').value);let p=PRODUCTS.find(x=>x.sku==='DSL');pushCartItem(p,l,{litres:l});document.getElementById('dieselModal').classList.remove('active');document.getElementById('dieselL').value=0;}
 
-async function pay(){if(CART.length===0)return;let tx={items:CART,subtotal:CART.reduce((a,b)=>a+b.price*b.qty,0),cashier:CURRENT_ROLE,timestamp:new Date(),synced:false};
-await localforage.getItem('queue').then(q=>{SYNC_QUEUE=q||[];SYNC_QUEUE.push(tx);localforage.setItem('queue',SYNC_QUEUE);});
-printReceipt(tx);deductStock();syncNow();CART=[];renderCart();notify('PAID ✓');}
-function printReceipt(tx){let doc=new jsPDF({unit:'mm',format:[80,200]});let y=10;doc.setFontSize(12);doc.text('SPARHUB OMNI-POS',40, y,{align:'center'});y+=6;doc.setFontSize(8);tx.items.forEach(i=>{doc.text(`${i.name} x${i.qty}`,5,y);doc.text(`R${(i.price*i.qty).toFixed(2)}`,75,y,{align:'right'});y+=5;});y+=3;doc.text(`TOTAL R${tx.subtotal*1.15}`,5,y);window.open(doc.output('bloburl'),'_blank');}
+function openTransport(){document.getElementById('transportModal').classList.add('active');let grid=document.getElementById('seatGrid');grid.innerHTML='';for(let i=1;i<=20;i++){let taken=i%7===0;grid.innerHTML+=`<div class="seat ${taken?'taken':''}" onclick="selectSeat(${i},${taken})">${i}</div>`;}}
+function selectSeat(n,taken){if(taken)return;document.querySelectorAll('.seat').forEach(s=>s.classList.remove('selected'));event.target.classList.add('selected');SELECTED_SEAT=n;}
+function addTicket(){if(!SELECTED_SEAT)return notify('Select seat');let p=PRODUCTS.find(x=>x.sku==='TICKET');pushCartItem(p,1,{seat:SELECTED_SEAT});document.getElementById('transportModal').classList.remove('active');SELECTED_SEAT=null;}
 
-async function deductStock(){for(let i of CART){if(i.unit!=='kg'&&i.unit!=='L'&&i.unit!=='m3'&&i.unit!=='seat'&&i.unit!=='plate'){let s=await db.collection('stock').doc(i.sku).get();let q=s.exists?s.data().qty:0;await db.collection('stock').doc(i.sku).set({qty:q-i.qty},{merge:true});}}}
-async function syncNow(){let q=await localforage.getItem('queue')||[];if(q.length===0)return;try{let batch=db.batch();q.forEach(tx=>{let ref=db.collection('transactions').doc();batch.set(ref,tx);});await batch.commit();await localforage.removeItem('queue');document.getElementById('syncDot').classList.add('ok');}catch(e){document.getElementById('syncDot').classList.remove('ok');}}
+function openStock(){if(!ROLE_PERMS[CURRENT_ROLE].stock)return notify('Manager only');document.getElementById('stockModal').classList.add('active');document.getElementById('stockList').innerHTML=Object.keys(STOCK).map(sku=>`<div class="row"><input value="${sku}" readonly><input type="number" id="st_${sku}" value="${STOCK[sku]}"><button class="btn btn-blue" onclick="saveStock('${sku}')">Save</button></div>`).join('');}
+function saveStock(sku){STOCK[sku]=parseInt(document.getElementById('st_'+sku).value);notify('Saved '+sku);}
+function closeStock(){document.getElementById('stockModal').classList.remove('active');localforage.setItem('stock',STOCK);renderProducts();}
+
+async function pay(){if(CART.length===0)return notify('Cart empty');let tx={id:'TX'+Date.now(),items:CART,subtotal:CART.reduce((a,b)=>a+b.price*b.qty,0),cashier:CURRENT_ROLE,timestamp:new Date(),synced:false};
+let q=await localforage.getItem('queue')||[];q.push(tx);await localforage.setItem('queue',q);
+printReceipt(tx);deductStock();syncNow();CART=[];renderCart();notify('PAID ✓ RECEIPT');}
+function printReceipt(tx){let doc=new jsPDF({unit:'mm',format:[80,200]});let y=8;doc.setFontSize(14);doc.text('SPARHUB OMNI-POS',40, y,{align:'center'});y+=5;doc.setFontSize(8);doc.text('Polokwane | VAT: 4590123456',40,y,{align:'center'});y+=6;tx.items.forEach(i=>{let name=i.name+(i.meta.seat?` #${i.meta.seat}`:'')+(i.meta.kg?` ${i.meta.kg}kg`:'');doc.text(name.substring(0,22),5,y);doc.text(`R${(i.price*i.qty).toFixed(2)}`,75,y,{align:'right'});y+=5;});y+=2;doc.line(5,y,75,y);y+=5;doc.setFontSize(10);doc.text(`TOTAL R${(tx.subtotal*1.15).toFixed(2)}`,5,y);window.open(doc.output('bloburl'),'_blank');}
+
+function deductStock(){CART.forEach(i=>{if(i.trackStock!==false&&i.unit!=='L'&&i.unit!=='m3'&&i.unit!=='load'&&i.unit!=='seat'&&i.unit!=='plate'){STOCK[i.sku]=(STOCK[i.sku]||0)-i.qty;}});localforage.setItem('stock',STOCK);}
+async function syncNow(){let q=await localforage.getItem('queue')||[];if(q.length===0)return;try{let batch=db.batch();q.forEach(tx=>{let ref=db.collection('transactions').doc(tx.id);batch.set(ref,{...tx,synced:true});await batch.commit();await localforage.removeItem('queue');document.getElementById('syncDot').classList.add('ok');}catch(e){document.getElementById('syncDot').classList.remove('ok');}}
 
 let qrScanner=null;function startScanner(){document.getElementById('qrReader').classList.add('active');qrScanner=new Html5Qrcode("qr");qrScanner.start({facingMode:"environment"},{fps:10,qrbox:250},txt=>{addToCart(txt);stopScanner();},()=>{});}
 function stopScanner(){if(qrScanner){qrScanner.stop().then(()=>qrScanner.clear());}document.getElementById('qrReader').classList.remove('active');}
-function openSettings(){notify('Settings: Manager only v1.1')}
 
 // INIT
-try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();}catch(e){notify('OFFLINE ONLY');}
-loadProducts();renderModules();setInterval(syncNow,15000); // auto-sync every 15s
+init();
 </script>
 </body>
-  </html>
+</html>
