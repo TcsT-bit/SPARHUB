@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>SparesHub OMNI-HUB v3.0.0 EMPIRE OS</title>
+<title>SparesHub OMNI-HUB v4.0.0</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -12,166 +12,156 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;touch-action:manipulation}
 body{background:var(--bg);color:#f1f5f9;font-size:14px}
 .header{background:linear-gradient(135deg,#16a34a,#3b82f6,#a855f7);padding:12px;position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center}
-.header h1{font-size:16px;font-weight:800}
-.role-badge{font-size:10px;background:var(--gold);color:#000;padding:4px 8px;border-radius:6px;font-weight:800}
-.sync-dot{width:10px;height:10px;border-radius:50%;background:var(--red);display:inline-block}
-.sync-dot.ok{background:var(--green)}
-.login-wrap{height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0a}
-.login-card{background:var(--card);padding:24px;border-radius:16px;width:90%;max-width:380px}
+.client-header{background:#111827;padding:12px;text-align:center}
+.client-header h1{font-size:20px}
 .hub-tabs{display:flex;gap:6px;overflow-x:auto;padding:12px;background:#111827;border-bottom:1px solid #1f2937}
 .hub-btn{flex:0 0 auto;padding:12px 16px;background:#1f2937;border-radius:10px;border:2px solid #374151;font-weight:800;cursor:pointer;font-size:13px}
 .hub-btn.active{border-color:var(--green);background:var(--green);color:#000}
 .hub-view{display:none;padding:12px}
 .hub-view.active{display:block}
-.sub-tabs{display:flex;gap:6px;margin-bottom:12px;border-bottom:1px solid #374151;overflow-x:auto}
-.sub-btn{flex:0 0 auto;padding:10px 14px;background:transparent;border:none;color:#9ca3af;font-weight:700;cursor:pointer;border-bottom:2px solid transparent}
-.sub-btn.active{color:var(--green);border-color:var(--green)}
 .card{background:var(--card);border-radius:12px;padding:12px;margin-bottom:12px}
 .btn{width:100%;padding:14px;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-size:15px;margin-top:8px;background:var(--green);color:#000}
-.btn-blue{background:var(--blue);color:#fff}.btn-red{background:var(--red);color:#fff}.btn-orange{background:var(--orange)}.btn-purple{background:var(--purple)}
-.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
-.prod{background:#1f2937;padding:10px;border-radius:10px;cursor:pointer;text-align:center;border:1px solid #374151}
+.btn-blue{background:var(--blue);color:#fff}.btn-red{background:var(--red);color:#fff}.btn-purple{background:var(--purple)}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.prod{background:#1f2937;padding:0;border-radius:12px;cursor:pointer;text-align:center;border:1px solid #374151;overflow:hidden}
+.prod img{width:100%;height:100px;object-fit:cover;background:#222}
+.prod-body{padding:8px}
 .table{width:100%;font-size:12px;border-collapse:collapse}
-.table th{text-align:left;padding:8px;border-bottom:1px solid #374151}
 .table td{padding:8px;border-bottom:1px solid #1f2937}
 input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #374151;background:#0a0a0a;color:#f1f5f9;margin-bottom:10px}
 .notification{position:fixed;top:20px;right:20px;background:var(--green);color:#000;padding:12px;border-radius:10px;z-index:9999;display:none;font-weight:800}
-.row{display:flex;gap:8px;align-items:center}
 .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:999}
 .modal.active{display:flex}
 .modal-card{background:var(--card);padding:20px;border-radius:16px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto}
-.warning{background:#f59e0b;color:#000;padding:10px;border-radius:8px;font-weight:700;text-align:center}
 .hidden{display:none}
+.float-cart{position:fixed;bottom:20px;right:20px;background:var(--green);color:#000;border-radius:50px;padding:16px 24px;font-weight:800;z-index:99;box-shadow:0 4px 20px #000}
+.share-box{background:#1f2937;padding:12px;border-radius:10px;margin:12px 0}
 </style>
 </head>
 <body>
 
-<div id="loginScreen" class="login-wrap">
-  <div class="login-card">
-    <h2>⚡ OMNI-HUB LOGIN</h2>
-    <input id="loginUser" placeholder="Username">
-    <input id="loginPass" type="password" placeholder="Password">
-    <select id="loginRole">
-      <option value="cashier">Cashier</option>
-      <option value="reception">Reception</option>
-      <option value="driver">Driver</option>
-      <option value="kitchen">Kitchen</option>
-      <option value="manager">Management</option>
-    </select>
-    <button class="btn" onclick="login()">LOGIN</button>
-    <small>Demo: any password works</small>
-  </div>
-</div>
-
-<div id="appScreen" class="hidden">
+<div id="adminApp" class="hidden">
   <div class="header">
-    <h1>⚡ OMNI-HUB v3.0.0 <span class="role-badge" id="roleBadge"></span></h1>
-    <div><span class="sync-dot" id="syncDot"></span><button class="btn-red" style="padding:8px 12px;margin-left:8px" onclick="logout()">EXIT</button></div>
+    <h1>⚡ OMNI-HUB v4.0.0 ADMIN</h1>
+    <div><span style="font-size:12px;color:var(--gold)" id="roleBadge"></span><button class="btn-red" style="padding:8px 12px;margin-left:8px" onclick="logout()">EXIT</button></div>
   </div>
   <div class="notification" id="notification"></div>
-  <div id="ageModal" class="modal"><div class="modal-card"><h2>🍺 TAVERN COMPLIANCE</h2><div class="warning">Customer Over 18? ID Checked?</div><button class="btn" onclick="ageConfirm(true)">YES</button><button class="btn btn-red" onclick="ageConfirm(false)">NO</button></div></div>
+  <div id="ageModal" class="modal"><div class="modal-card"><h2>🍺 TAVERN COMPLIANCE</h2><button class="btn" onclick="ageConfirm(true)">YES</button><button class="btn btn-red" onclick="ageConfirm(false)">NO</button></div></div>
   <div id="invoiceModal" class="modal"><div class="modal-card"><h2>🧾 INVOICE DETAILS</h2><input id="invClient" placeholder="Client Name"><input id="invPhone" placeholder="Phone/WhatsApp"><textarea id="invAddr" placeholder="Address"></textarea><button class="btn" onclick="saveInvoice()">SAVE & PRINT PDF</button><button class="btn btn-red" onclick="document.getElementById('invoiceModal').classList.remove('active')">CANCEL</button></div></div>
 
+  <div class="share-box"><b>CLIENT LINK:</b> <input id="clientLink" readonly onclick="this.select()"><button class="btn btn-blue" onclick="navigator.clipboard.writeText(document.getElementById('clientLink').value);notify('Copied')">COPY</button></div>
+  
   <div class="hub-tabs" id="hubTabs"></div>
   <div id="hubViews"></div>
 </div>
 
+<div id="clientApp" class="hidden">
+  <div class="client-header"><h1>⚡ SparesHub STORE</h1><p>Browse all categories below</p></div>
+  <div class="hub-tabs" id="clientHubTabs"></div>
+  <div id="clientHubViews"></div>
+  <div class="float-cart" onclick="openClientCart()">🛒 <span id="cartCount">0</span> | R<span id="cartTotal">0.00</span></div>
+  <div id="clientCartModal" class="modal"><div class="modal-card"><h2>🛒 YOUR CART</h2><div id="clientCartList"></div><button class="btn" onclick="openClientInvoice()">GET QUOTE ON WHATSAPP</button><button class="btn btn-red" onclick="document.getElementById('clientCartModal').classList.remove('active')">CLOSE</button></div></div>
+</div>
+
+<div id="loginScreen">
+  <div class="modal-card" style="margin:10vh auto">
+    <h2>⚡ OMNI-HUB ADMIN LOGIN</h2>
+    <input id="loginUser" placeholder="Username">
+    <input id="loginPass" type="password" placeholder="Password">
+    <select id="loginRole"><option value="cashier">Cashier</option><option value="manager">Management</option></select>
+    <button class="btn" onclick="login()">LOGIN</button>
+    <hr style="margin:12px 0">
+    <a href="?client" class="btn btn-blue" style="text-align:center;display:block;text-decoration:none">OPEN CLIENT STORE</a>
+  </div>
+</div>
+
 <script>
 const { jsPDF } = window.jspdf;
-const firebaseConfig = {apiKey: "OFFLINE_MODE", authDomain: "offline.local", projectId: "offline"}; // REPLACE WITH REAL KEYS
+const IS_CLIENT = window.location.search.includes('client');
 
-let db, CURRENT_USER=null, CURRENT_ROLE='cashier', ACTIVE_HUB='bricks', ACTIVE_SUB='sell', CART=[], PENDING_ALCOHOL=null, EDIT_INV_ID=null;
+let CURRENT_ROLE='manager', ACTIVE_HUB='bricks', CART=[], PENDING_ALCOHOL=null;
 
-const PERMISSIONS = {
-  cashier: {hubs:['bricks','tavern','water','diesel'], subs:['sell','invoices']},
-  reception: {hubs:['bricks','tavern','water','diesel','transport','restaurant'], subs:['sell','invoices','stock','reports']},
-  driver: {hubs:['diesel','sand','transport'], subs:['sell','stock']},
-  kitchen: {hubs:['restaurant'], subs:['sell','kitchen']},
-  manager: {hubs:['bricks','tavern','chickens','diesel','sand','water','scrap','transport','restaurant'], subs:['sell','invoices','stock','reports','pump','vin','seats','kitchen','compliance','weigh','scale']}
+const HUBS = JSON.parse(localStorage.getItem('HUBS_DATA_V4')||'null') || {
+  bricks:{name:'🧱 Bricks', products:[{sku:'B6',name:'6" Brick',price:3.20,stock:500,cost:2.10,img:'https://images.unsplash.com/photo-1591088398332-8a7791972843?w=300'}]},
+  tavern:{name:'🍺 Tavern', products:[{sku:'BEER',name:'Castle 500ml',price:22,stock:100,cost:15,alcohol:true,img:'https://images.unsplash.com/photo-1608270586620-57bd79aacb6d?w=300'}]},
+  water:{name:'💧 Water', products:[{sku:'WATER25',name:'Water 25L Drum',price:35,stock:50,cost:20,img:'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300'}]},
+  diesel:{name:'⛽ Diesel', products:[{sku:'DSL',name:'Diesel/L',price:24.50,stock:5000,cost:22,img:'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=300'}]},
+  sand:{name:'🏜️ Sand', products:[{sku:'RIVER',name:'River Sand/m³',price:450,stock:100,cost:300,img:'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=300'}]},
+  chickens:{name:'🐔 Chickens', products:[{sku:'CHICK',name:'Live Chicken/kg',price:28,stock:100,cost:20,img:'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=300'}]},
+  scrap:{name:'🔩 Scrap', products:[{sku:'TYRE15',name:'VW Tyre 15"',price:350,stock:12,cost:200,vin:'WVWZZZ',img:'https://images.unsplash.com/photo-1486262710619-324dbdee2a17?w=300'}]},
+  transport:{name:'🚌 Transport', products:[{sku:'JHB',name:'Polokwane-JHB',price:80,stock:20,cost:50,img:'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=300'}]},
+  restaurant:{name:'🍔 Restaurant', products:[{sku:'BURGER',name:'Burger',price:55,stock:0,cost:30,img:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300'}]}
 };
 
-const HUBS = JSON.parse(localStorage.getItem('HUBS_DATA')||'null') || {
-  bricks:{name:'🧱 Bricks', subs:['sell','invoices','stock','reports'], products:[{sku:'B6',name:'6" Brick',price:3.20,stock:500,cost:2.10}]},
-  tavern:{name:'🍺 Tavern', subs:['sell','invoices','stock','reports','compliance'], products:[{sku:'BEER',name:'Castle 500ml',price:22,stock:100,cost:15,alcohol:true}]},
-  water:{name:'💧 Water', subs:['sell','invoices','stock','reports'], products:[{sku:'WATER25',name:'Water 25L Drum',price:35,stock:50,cost:20}]},
-  diesel:{name:'⛽ Diesel', subs:['sell','invoices','stock','reports','pump'], products:[{sku:'DSL',name:'Diesel/L',price:24.50,stock:5000,cost:22}]},
-  sand:{name:'🏜️ Sand', subs:['sell','invoices','stock','reports','weigh'], products:[{sku:'RIVER',name:'River Sand/m³',price:450,stock:100,cost:300}]},
-  chickens:{name:'🐔 Chickens', subs:['sell','invoices','stock','reports','scale'], products:[{sku:'CHICK',name:'Live Chicken/kg',price:28,stock:100,cost:20}]},
-  scrap:{name:'🔩 Scrap', subs:['sell','invoices','stock','reports','vin'], products:[{sku:'TYRE15',name:'VW Tyre 15"',price:350,stock:12,cost:200,vin:'WVWZZZ'}]},
-  transport:{name:'🚌 Transport', subs:['sell','invoices','stock','reports','seats'], products:[{sku:'JHB',name:'Polokwane-JHB',price:80,stock:20,cost:50}]},
-  restaurant:{name:'🍔 Restaurant', subs:['sell','invoices','stock','reports','kitchen'], products:[{sku:'BURGER',name:'Burger',price:55,stock:0,cost:30}]}
-};
-
-function saveHubs(){localStorage.setItem('HUBS_DATA',JSON.stringify(HUBS));}
+function saveHubs(){localStorage.setItem('HUBS_DATA_V4',JSON.stringify(HUBS));}
 function notify(msg){let n=document.getElementById('notification');n.textContent=msg;n.style.display='block';setTimeout(()=>n.style.display='none',2500);}
 
-function login(){
-  CURRENT_USER=document.getElementById('loginUser').value||'User';
-  CURRENT_ROLE=document.getElementById('loginRole').value;
-  document.getElementById('roleBadge').textContent=CURRENT_ROLE.toUpperCase();
-  document.getElementById('loginScreen').classList.add('hidden');
-  document.getElementById('appScreen').classList.remove('hidden');
-  init();
+function init(){
+  if(IS_CLIENT){
+    document.getElementById('clientApp').classList.remove('hidden');
+    document.getElementById('loginScreen').classList.add('hidden');
+    renderClientHubs();
+  }else{
+    document.getElementById('adminApp').classList.remove('hidden');
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('clientLink').value = window.location.origin + window.location.pathname + '?client';
+    document.getElementById('roleBadge').textContent = CURRENT_ROLE.toUpperCase();
+    renderAdminHubs();
+  }
 }
-function logout(){location.reload();}
+function login(){CURRENT_ROLE=document.getElementById('loginRole').value;init();}
+function logout(){window.location.search='';}
 
-function init(){renderHubTabs();switchHub(PERMISSIONS[CURRENT_ROLE].hubs[0]);}
-
-function renderHubTabs(){
-  let allowed=PERMISSIONS[CURRENT_ROLE].hubs;
-  document.getElementById('hubTabs').innerHTML = Object.keys(HUBS).filter(k=>allowed.includes(k)).map(k=>`<div class="hub-btn ${k===ACTIVE_HUB?'active':''}" onclick="switchHub('${k}')">${HUBS[k].name}</div>`).join('');
+function renderAdminHubs(){
+  document.getElementById('hubTabs').innerHTML = Object.keys(HUBS).map(k=>`<div class="hub-btn ${k===ACTIVE_HUB?'active':''}" onclick="switchAdminHub('${k}')">${HUBS[k].name}</div>`).join('');
+  renderAdminView();
 }
-
-function switchHub(hub){ACTIVE_HUB=hub; ACTIVE_SUB='sell'; renderHubTabs();
-  let allowedSubs=PERMISSIONS[CURRENT_ROLE].subs.filter(s=>HUBS[hub].subs.includes(s));
-  let view = document.getElementById('hubViews');
-  view.innerHTML = `<div class="hub-view active"><div class="sub-tabs">${allowedSubs.map(s=>`<button class="sub-btn ${s===ACTIVE_SUB?'active':''}" onclick="switchSub('${s}')">${s.toUpperCase()}</button>`).join('')}</div><div id="subContent"></div></div>`;
-  renderSub();
+function switchAdminHub(h){ACTIVE_HUB=h;renderAdminHubs();}
+function renderAdminView(){
+  let p=HUBS[ACTIVE_HUB].products;
+  document.getElementById('hubViews').innerHTML = `
+  <div class="hub-view active">
+    <div class="card"><h3>${HUBS[ACTIVE_HUB].name} - ADMIN</h3>
+      <div class="product-grid">${p.map(x=>`<div class="prod"><img src="${x.img||''}"><div class="prod-body">${x.name}<br>R${x.price}<br><small>Stock:${x.stock}</small></div></div>`).join('')}</div>
+      <hr style="margin:12px 0">
+      <h4>+ ADD/EDIT PRODUCT</h4>
+      <input id="newSku" placeholder="SKU">
+      <input id="newName" placeholder="Name">
+      <input id="newPrice" type="number" placeholder="Price">
+      <input id="newStock" type="number" placeholder="Stock">
+      <input id="newImg" type="file" accept="image/*" onchange="uploadImg(event)">
+      <img id="imgPreview" style="width:100%;max-height:120px;object-fit:cover;display:none">
+      <button class="btn btn-purple" onclick="addProduct()">SAVE PRODUCT</button>
+    </div>
+  </div>`;
 }
+let UPLOADED_IMG='';
+function uploadImg(e){let f=e.target.files[0];let r=new FileReader();r.onload=ev=>{UPLOADED_IMG=ev.target.result;document.getElementById('imgPreview').src=UPLOADED_IMG;document.getElementById('imgPreview').style.display='block';};r.readAsDataURL(f);}
+function addProduct(){let sku=document.getElementById('newSku').value.toUpperCase();if(!sku)return notify('SKU required');HUBS[ACTIVE_HUB].products.push({sku,name:document.getElementById('newName').value,price:parseFloat(document.getElementById('newPrice').value),stock:parseInt(document.getElementById('newStock').value),img:UPLOADED_IMG});saveHubs();notify('Product Added');UPLOADED_IMG='';renderAdminView();}
 
-function switchSub(sub){ACTIVE_SUB=sub;document.querySelectorAll('.sub-btn').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');renderSub();}
-
-function renderSub(){
-  let c = document.getElementById('subContent'); let p = HUBS[ACTIVE_HUB].products || [];
-  if(ACTIVE_SUB==='sell'){c.innerHTML = `<div class="card"><h3>SELL</h3><div class="product-grid">${p.map(x=>`<div class="prod" onclick="sellItem('${x.sku}',1)">${x.name}<br>R${x.price}<br><small>Stock:${x.stock}</small></div>`).join('')}</div><div class="row"><input id="bulkQty" type="number" value="1" placeholder="Qty"><button class="btn btn-blue" onclick="bulkSell()">ADD QTY TO CART</button></div><div style="margin-top:8px">CART: ${CART.length} items | R${CART.reduce((a,b)=>a+b.price*b.qty,0).toFixed(2)}</div><button class="btn" onclick="openInvoiceModal()">GENERATE INVOICE</button></div>`;}
-  if(ACTIVE_SUB==='invoices'){let invs=JSON.parse(localStorage.getItem(ACTIVE_HUB+'_inv')||'[]');
-    c.innerHTML = `<div class="card"><h3>INVOICES</h3><button class="btn" onclick="openInvoiceModal()">+ NEW INVOICE</button><table class="table"><tr><th>INV#</th><th>Client</th><th>Total</th><th>Actions</th></tr>${invs.map(i=>`<tr><td>${i.id}</td><td>${i.client}</td><td>R${i.total}</td><td><button onclick="printInv('${i.id}')">🖨️</button><button onclick="editInv('${i.id}')">✏️</button><button onclick="delInv('${i.id}')">🗑️</button></td></tr>`).join('')||'<tr><td colspan=4>No Invoices</td></tr>'}</table></div>`;}
-  if(ACTIVE_SUB==='stock'){c.innerHTML = `<div class="card"><h3>STOCK TAKE</h3>${p.map(x=>`<div class="row"><input value="${x.name}" readonly><input type="number" id="st_${x.sku}" value="${x.stock}"><button class="btn btn-blue" onclick="saveStock('${x.sku}')">Save</button></div>`).join('')}<hr style="margin:12px 0"><h4>+ ADD NEW PRODUCT</h4><input id="newSku" placeholder="SKU"><input id="newName" placeholder="Name"><input id="newPrice" type="number" placeholder="Price"><input id="newCost" type="number" placeholder="Cost"><input id="newStock" type="number" placeholder="Opening Stock"><button class="btn btn-purple" onclick="addProduct()">ADD PRODUCT</button></div>`;}
-  if(ACTIVE_SUB==='reports'){let invs=JSON.parse(localStorage.getItem(ACTIVE_HUB+'_inv')||'[]');let total=invs.reduce((a,b)=>a+parseFloat(b.total),0);let cost=invs.flatMap(i=>i.items).reduce((a,b)=>a+(b.cost||0)*b.qty,0);c.innerHTML = `<div class="card"><h3>REPORTS</h3><p>Invoices: ${invs.length}</p><p>Sales: R${total.toFixed(2)}</p><p>COGS: R${cost.toFixed(2)}</p><p>Profit: R${(total-cost).toFixed(2)}</p><button class="btn" onclick="exportCSV()">EXPORT CSV</button></div>`;}
-  if(ACTIVE_SUB==='pump'){c.innerHTML = `<div class="card"><h3>⛽ DIESEL PUMP</h3><input id="dieselL" type="number" value="0"><div class="row"><button class="btn" onclick="adjL(-10)">-10</button><button class="btn" onclick="adjL(1)">+1</button><button class="btn" onclick="adjL(10)">+10</button></div><h3 id="dTotal">R0.00</h3><button class="btn" onclick="addDiesel()">ADD TO CART</button></div>`;}
-  if(ACTIVE_SUB==='vin'){c.innerHTML = `<div class="card"><h3>🔩 VIN SCAN</h3><input id="vin" placeholder="WVWZZZ..."><button class="btn btn-blue" onclick="scanVIN()">SEARCH</button><div id="vinRes"></div></div>`;}
-  if(ACTIVE_SUB==='seats'){c.innerHTML = `<div class="card"><h3>🚌 SEAT MAP</h3><div class="product-grid">${Array.from({length:20},(_,i)=>`<div class="prod" onclick="sellItem('JHB',1,{seat:i+1})">Seat ${i+1}</div>`).join('')}</div></div>`;}
-  if(ACTIVE_SUB==='kitchen'){c.innerHTML = `<div class="card"><h3>🍔 KITCHEN DOCKETS</h3>${p.map(x=>`<div class="prod" onclick="sellItem('${x.sku}',1)">${x.name} R${x.price}</div>`).join('')}<button class="btn" onclick="printKitchen()">PRINT KITCHEN</button></div>`;}
-  if(ACTIVE_SUB==='compliance'){c.innerHTML = `<div class="card"><h3>🍺 COMPLIANCE LOG</h3><p>All alcohol sales logged with ID check.</p></div>`;}
-  if(ACTIVE_SUB==='weigh'){c.innerHTML = `<div class="card"><h3>🏜️ WEIGHBRIDGE</h3><input id="in" placeholder="IN kg"><input id="out" placeholder="OUT kg"><button class="btn" onclick="calcSand()">CALC m³</button><h3 id="sandRes"></h3><button class="btn" onclick="addSand()">ADD TO CART</button></div>`;}
+function renderClientHubs(){
+  document.getElementById('clientHubTabs').innerHTML = Object.keys(HUBS).map(k=>`<div class="hub-btn ${k===ACTIVE_HUB?'active':''}" onclick="switchClientHub('${k}')">${HUBS[k].name}</div>`).join('');
+  renderClientView();
 }
-
-function bulkSell(){let qty=parseInt(document.getElementById('bulkQty').value)||1;let last=CART[CART.length-1];if(last){last.qty+=qty;last.stock-=qty;notify(`Added ${qty}x ${last.name}`);renderSub();}}
-
-function sellItem(sku,qty=1,meta={}){let x=HUBS[ACTIVE_HUB].products.find(i=>i.sku===sku);if(!x)return;if(x.alcohol){PENDING_ALCOHOL={...x,qty,meta};document.getElementById('ageModal').classList.add('active');return;}if(x.stock<qty)return notify('OUT OF STOCK');let ex=CART.find(i=>i.sku===sku&&JSON.stringify(i.meta)===JSON.stringify(meta));if(ex){ex.qty+=qty;}else{CART.push({...x,qty,meta});}x.stock-=qty;notify(`Added ${qty}x ${x.name}`);}
-function ageConfirm(ok){document.getElementById('ageModal').classList.remove('active');if(ok){let x=PENDING_ALCOHOL;if(x.stock<x.qty)return notify('OUT OF STOCK');CART.push(x);x.stock-=x.qty;notify('Alcohol Added');}}
-
-function openInvoiceModal(){if(CART.length===0)return notify('Cart empty');document.getElementById('invoiceModal').classList.add('active');}
-function saveInvoice(){let client=document.getElementById('invClient').value||'Walk-in';let phone=document.getElementById('invPhone').value;let addr=document.getElementById('invAddr').value;let total=CART.reduce((a,b)=>a+b.price*b.qty,0)*1.15;let inv={id:EDIT_INV_ID||'INV'+Date.now(),client,phone,addr,items:CART,total:total.toFixed(2),user:CURRENT_USER,date:new Date().toLocaleString()};
-  let arr=JSON.parse(localStorage.getItem(ACTIVE_HUB+'_inv')||'[]');
-  if(EDIT_INV_ID){arr=arr.map(i=>i.id===EDIT_INV_ID?inv:i);}else{arr.push(inv);}
-  localStorage.setItem(ACTIVE_HUB+'_inv',JSON.stringify(arr));
-  printInv(inv.id);CART=[];EDIT_INV_ID=null;document.getElementById('invoiceModal').classList.remove('active');notify('Invoice Saved ✓');renderSub();
+function switchClientHub(h){ACTIVE_HUB=h;renderClientHubs();}
+function renderClientView(){
+  let p=HUBS[ACTIVE_HUB].products;
+  document.getElementById('clientHubViews').innerHTML = `
+  <div class="hub-view active">
+    <div class="card"><h3>${HUBS[ACTIVE_HUB].name}</h3>
+      <div class="product-grid">${p.map(x=>`<div class="prod" onclick="clientAdd('${x.sku}')"><img src="${x.img||''}"><div class="prod-body">${x.name}<br><b>R${x.price}</b></div></div>`).join('')}</div>
+    </div>
+  </div>`;
+  updateCartFloat();
 }
-function editInv(id){let arr=JSON.parse(localStorage.getItem(ACTIVE_HUB+'_inv')||'[]');let inv=arr.find(i=>i.id===id);EDIT_INV_ID=id;CART=inv.items;document.getElementById('invClient').value=inv.client;document.getElementById('invPhone').value=inv.phone;document.getElementById('invAddr').value=inv.addr;document.getElementById('invoiceModal').classList.add('active');}
-function delInv(id){let arr=JSON.parse(localStorage.getItem(ACTIVE_HUB+'_inv')||'[]').filter(i=>i.id!==id);localStorage.setItem(ACTIVE_HUB+'_inv',JSON.stringify(arr));notify('Deleted');renderSub();}
-function printInv(id){let arr=JSON.parse(localStorage.getItem(ACTIVE_HUB+'_inv')||'[]');let inv=arr.find(i=>i.id===id);let doc=new jsPDF({unit:'mm',format:[80,200]});doc.setFontSize(14);doc.text('SPARHUB INVOICE',40,10,{align:'center'});doc.setFontSize(9);doc.text(`INV: ${inv.id}`,5,18);doc.text(`Client: ${inv.client}`,5,24);doc.text(`Phone: ${inv.phone||'-'}`,5,30);doc.text(`By: ${inv.user} ${inv.date}`,5,36);let y=44;inv.items.forEach(it=>{doc.text(`${it.name} x${it.qty}`,5,y);doc.text(`R${(it.price*it.qty).toFixed(2)}`,75,y,{align:'right'});y+=6;});y+=4;doc.line(5,y,75,y);y+=6;doc.setFontSize(11);doc.text(`TOTAL R${inv.total}`,5,y);window.open(doc.output('bloburl'),'_blank');}
+function clientAdd(sku){let x=HUBS[ACTIVE_HUB].products.find(i=>i.sku===sku);let ex=CART.find(i=>i.sku===sku);if(ex){ex.qty++;}else{CART.push({...x,qty:1});}notify(`Added ${x.name}`);updateCartFloat();}
+function updateCartFloat(){document.getElementById('cartCount').textContent=CART.reduce((a,b)=>a+b.qty,0);document.getElementById('cartTotal').textContent=CART.reduce((a,b)=>a+b.price*b.qty,0).toFixed(2);}
+function openClientCart(){document.getElementById('clientCartList').innerHTML=CART.map((i,idx)=>`<div class="row"><span>${i.name} x${i.qty}</span><button class="btn-red" style="padding:4px 8px" onclick="CART.splice(${idx},1);openClientCart();updateCartFloat()">x</button></div>`).join('')||'Cart Empty';document.getElementById('clientCartModal').classList.add('active');}
+function openClientInvoice(){let total=CART.reduce((a,b)=>a+b.price*b.qty,0)*1.15;let msg=`Hi SparesHub, I want to buy:\n${CART.map(i=>`${i.name} x${i.qty} = R${i.price*i.qty}`).join('\n')}\n\nTotal incl VAT: R${total.toFixed(2)}`;window.open(`https://wa.me/27XXXXXXXXXX?text=${encodeURIComponent(msg)}`,'_blank');}
 
-function saveStock(sku){let x=HUBS[ACTIVE_HUB].products.find(i=>i.sku===sku);x.stock=parseInt(document.getElementById('st_'+sku).value);saveHubs();notify('Stock Saved');}
-function addProduct(){let sku=document.getElementById('newSku').value.toUpperCase();if(!sku)return notify('SKU required');HUBS[ACTIVE_HUB].products.push({sku,name:document.getElementById('newName').value,price:parseFloat(document.getElementById('newPrice').value),cost:parseFloat(document.getElementById('newCost').value),stock:parseInt(document.getElementById('newStock').value)});saveHubs();notify('Product Added');renderSub();}
+function ageConfirm(ok){document.getElementById('ageModal').classList.remove('active');}
 
-function adjL(v){let l=parseFloat(document.getElementById('dieselL').value)+v;if(l<0)l=0;document.getElementById('dieselL').value=l;document.getElementById('dTotal').textContent='R'+(l*24.5).toFixed(2);}
-function addDiesel(){let l=parseFloat(document.getElementById('dieselL').value);CART.push({name:`Diesel ${l}L`,price:24.5,qty:l,cost:22});notify(`Added ${l}L`);document.getElementById('dieselL').value=0;adjL(0);}
-function scanVIN(){let v=document.getElementById('vin').value.toUpperCase();let res=HUBS.scrap.products.filter(p=>p.vin&&v.includes(p.vin));document.getElementById('vinRes').innerHTML=res.map(p=>`<div class="prod" onclick="sellItem('${p.sku}',1)">${p.name} R${p.price}</div>`).join('')||'No match';}
-function calcSand(){let inW=parseFloat(document.getElementById('in').value)||0;let outW=parseFloat(document.getElementById('out').value)||0;let m3=((inW-outW)/1500).toFixed(2);document.getElementById('sandRes').textContent=`${m3} m³ = R${(m3*450).toFixed(2)}`;}
-function addSand(){let m3=((parseFloat(document.getElementById('in').value)-parseFloat(document.getElementById('out').value))/1500).toFixed(2);CART.push({name:`Sand ${m3}m³`,price:450,qty:parseFloat(m3),cost:300});notify('Sand Added');}
-function printKitchen(){let doc=new jsPDF({unit:'mm',format:[80,100]});doc.setFontSize(14);doc.text('KITCHEN DOCKET',40,10,{align:'center'});CART.forEach((it,i)=>doc.text(`${it.name} x${it.qty}`,5,20+i*6));window.open(doc.output('bloburl'),'_blank');}
-function exportCSV(){let invs=JSON.parse(localStorage.getItem(ACTIVE_HUB+'_inv')||'[]');let csv='ID,Client,Total,Date\n'+invs.map(i=>`${i.id},${i.client},${i.total},${i.date}`).join('\n');let blob=new Blob([csv],{type:'text/csv'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${ACTIVE_HUB}_reports.csv`;a.click();}
+init();
 </script>
 </body>
 </html>
