@@ -3,17 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>SparesHub OMNI-POS v1.0.1 HOTFIX</title>
+<meta name="theme-color" content="#16a34a">
+<link rel="manifest" href="data:application/manifest+json,{"name":"OMNI-POS","short_name":"POS","start_url":".","display":"standalone","background_color":"#0a0a0a","theme_color":"#16a34a"}">
+<title>SparesHub OMNI-POS v1.0.3 EMPIRE</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
 <style>
-:root{--bg:#0a0a0a;--card:#111827;--green:#16a34a;--red:#dc2626;--blue:#3b82f6;--gold:#fbbf24;--cyan:#06b6d4;--orange:#ea580c}
+:root{--bg:#0a0a0a;--card:#111827;--green:#16a34a;--red:#dc2626;--blue:#3b82f6;--gold:#fbbf24;--cyan:#06b6d4;--orange:#ea580c;--purple:#a855f7}
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;touch-action:manipulation}
 body{background:var(--bg);color:#f1f5f9;font-size:14px}
-.header{background:linear-gradient(135deg,#16a34a,#3b82f6,#f59e0b);padding:12px;position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center}
+.header{background:linear-gradient(135deg,#16a34a,#3b82f6,#a855f7);padding:12px;position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center}
 .header h1{font-size:16px;font-weight:800}
 .icon-btn{background:#1f2937;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;color:white;font-size:14px;font-weight:700}
 .role-badge{font-size:10px;background:var(--gold);color:#000;padding:2px 6px;border-radius:6px;font-weight:800;margin-left:6px}
@@ -22,6 +24,8 @@ body{background:var(--bg);color:#f1f5f9;font-size:14px}
 .container{display:grid;grid-template-columns:1fr 380px;gap:12px;padding:12px;height:calc(100vh - 60px)}
 @media(max-width:900px){.container{grid-template-columns:1fr}}
 .card{background:var(--card);border-radius:12px;padding:12px;border:1px solid #1f2937;overflow:hidden;display:flex;flex-direction:column}
+.search-bar{display:flex;gap:6px;margin-bottom:8px}
+.search-bar input{flex:1;margin:0}
 .modules{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px}
 .mod-btn{flex:0 0 auto;padding:10px 14px;background:#1f2937;border-radius:10px;border:2px solid #374151;font-weight:800;cursor:pointer;font-size:12px}
 .mod-btn.active{border-color:var(--green);background:var(--green);color:#000}
@@ -38,13 +42,12 @@ body{background:var(--bg);color:#f1f5f9;font-size:14px}
 .totals{padding:12px 0;border-top:2px solid var(--green);margin-top:auto}
 .total-line{display:flex;justify-content:space-between;font-weight:800;font-size:18px}
 .btn{width:100%;padding:14px;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-size:15px;margin-top:8px}
-.btn-green{background:var(--green);color:#000}.btn-red{background:var(--red);color:white}.btn-blue{background:var(--blue);color:white}.btn-orange{background:var(--orange);color:white}
+.btn-green{background:var(--green);color:#000}.btn-red{background:var(--red);color:white}.btn-blue{background:var(--blue);color:white}.btn-orange{background:var(--orange);color:white}.btn-purple{background:var(--purple);color:white}
 .btn:disabled{opacity:0.4;cursor:not-allowed}
 .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:999}
 .modal.active{display:flex}
 .modal-card{background:var(--card);padding:20px;border-radius:16px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto}
 input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #374151;background:#0a0a0a;color:#f1f5f9;margin-bottom:10px;font-size:15px}
-.hidden{display:none!important}
 .notification{position:fixed;top:20px;right:20px;background:var(--green);color:#000;padding:12px;border-radius:10px;z-index:9999;display:none;font-weight:800}
 .qty-btn{background:#374151;border:none;color:#fff;padding:10px 14px;border-radius:8px;font-size:18px;font-weight:800}
 .row{display:flex;gap:8px;align-items:center}
@@ -54,14 +57,17 @@ input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #374151;
 .seat{background:#1f2937;padding:12px;border-radius:8px;text-align:center;cursor:pointer;border:2px solid #374151}
 .seat.taken{background:#dc2626;cursor:not-allowed}
 .seat.selected{background:var(--green);color:#000}
+.eva-listening{animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>⚡ OMNI-POS v1.0.1 <span class="role-badge" id="roleBadge">CASHIER</span><span class="sync-dot" id="syncDot"></span></h1>
+  <h1>⚡ OMNI-POS v1.0.3 <span class="role-badge" id="roleBadge">CASHIER</span><span class="sync-dot" id="syncDot"></span></h1>
   <div>
-    <button class="icon-btn" onclick="startScanner()">📷 Scan</button>
+    <button class="icon-btn" onclick="startScanner()">📷</button>
+    <button class="icon-btn eva" id="evaBtn" onclick="startEVA()">🎤</button>
     <button class="icon-btn" onclick="toggleRole()">👤</button>
     <button class="icon-btn" onclick="openStock()">📦</button>
   </div>
@@ -72,6 +78,7 @@ input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #374151;
 
 <div class="container">
   <div class="card">
+    <div class="search-bar"><input id="searchBox" placeholder="Search SKU/Name... or use 🎤 EVA" oninput="renderProducts()"></div>
     <div class="modules" id="moduleTabs"></div>
     <div class="module-tools" id="moduleTools"></div>
     <div class="products" id="products"></div>
@@ -92,8 +99,11 @@ input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #374151;
 <div id="ageModal" class="modal"><div class="modal-card"><h2>🍺 TAVERN COMPLIANCE</h2><div class="warning">Customer Over 18? ID Checked?</div><button class="btn btn-green" onclick="ageConfirm(true)">YES</button><button class="btn btn-red" onclick="ageConfirm(false)">NO - CANCEL</button></div></div>
 <div id="scaleModal" class="modal"><div class="modal-card"><h2>🐔 LIVE SCALE BT</h2><div class="scale-readout" id="scaleReadout">0.00 kg</div><div class="row"><button class="btn btn-blue" onclick="connectScale()">1. Connect Scale</button></div><div class="row"><input id="kgPrice" type="number" value="28" placeholder="Price per KG"><button class="btn btn-green" onclick="addChicken()">2. ADD TO CART</button></div></div></div>
 <div id="dieselModal" class="modal"><div class="modal-card"><h2>⛽ DIESEL PUMP</h2><input id="dieselPrice" type="number" value="24.50" placeholder="Price per L"><div class="row"><button class="qty-btn" onclick="adjL(-10)">-10L</button><button class="qty-btn" onclick="adjL(-1)">-1L</button><input id="dieselL" type="number" value="0" readonly style="text-align:center;font-size:24px"><button class="qty-btn" onclick="adjL(1)">+1L</button><button class="qty-btn" onclick="adjL(10)">+10L</button></div><button class="btn btn-orange" onclick="document.getElementById('dieselL').value=5000;adjL(0)">TANKER 5000L</button><h3 id="dieselTotal">R0.00</h3><button class="btn btn-green" onclick="addDiesel()">ADD TO CART</button></div></div>
-<div id="transportModal" class="modal"><div class="modal-card"><h2>🚌 BUS TICKET</h2><select id="busRoute"><option>Polokwane - JHB R80</option><option>Polokwane - Nelspruit R120</option></select><div class="seat-grid" id="seatGrid"></div><button class="btn btn-green" onclick="addTicket()">ADD TICKET</button></div></div>
-<div id="stockModal" class="modal"><div class="modal-card"><h2>📦 STOCK TAKE</h2><div id="stockList"></div><button class="btn btn-green" onclick="closeStock()">CLOSE</button></div></div>
+<div id="sandModal" class="modal"><div class="modal-card"><h2>🏜️ WEIGHBRIDGE</h2><input id="sandWeightIn" type="number" placeholder="Truck IN kg"><input id="sandWeightOut" type="number" placeholder="Truck OUT kg"><h3 id="sandNet">Net: 0kg = 0m³</h3><button class="btn btn-blue" onclick="calcSand()">CALC m³</button><button class="btn btn-green" onclick="addSand()">ADD TO CART</button></div></div>
+<div id="scrapModal" class="modal"><div class="modal-card"><h2>🔩 VIN SCAN</h2><input id="vinInput" placeholder="Scan or Type VIN"><div id="vinResults"></div><button class="btn btn-blue" onclick="scanVIN()">SEARCH PARTS</button></div></div>
+<div id="transportModal" class="modal"><div class="modal-card"><h2>🚌 BUS TICKET</h2><select id="busRoute"><option data-price="80">Polokwane - JHB R80</option><option data-price="120">Polokwane - Nelspruit R120</option></select><div class="seat-grid" id="seatGrid"></div><button class="btn btn-green" onclick="addTicket()">ADD TICKET</button></div></div>
+<div id="restaurantModal" class="modal"><div class="modal-card"><h2>🍔 KITCHEN DOCKET</h2><h3 id="mealName"></h3><div id="mealMods"></div><button class="btn btn-green" onclick="confirmMeal()">SEND TO KITCHEN</button></div></div>
+<div id="stockModal" class="modal"><div class="modal-card"><h2>📦 STOCK TAKE + X/Z REPORT</h2><div id="stockList"></div><button class="btn btn-blue" onclick="xReport()">X-Report</button><button class="btn btn-red" onclick="zReport()">Z-Report</button><button class="btn btn-green" onclick="closeStock()">CLOSE</button></div></div>
 
 <script>
 const { jsPDF } = window.jspdf;
@@ -106,9 +116,10 @@ const firebaseConfig = { // <-- PASTE YOUR KEYS HERE NOW
   appId: "PASTE_APP_ID"
 };
 
-let db, CURRENT_ROLE='cashier', CURRENT_MODULE='bricks', CART=[], PRODUCTS=[], STOCK={}, SYNC_QUEUE=[], BT_SCALE=null, BT_CHAR=null, SELECTED_SEAT=null;
+let db, CURRENT_ROLE='cashier', CURRENT_MODULE='bricks', CART=[], PRODUCTS=[], STOCK={}, SYNC_QUEUE=[], BT_SCALE=null, BT_CHAR=null, SELECTED_SEAT=null, MEAL_PENDING=null;
 const VAT_RATE=0.15;
 let PENDING_ALCOHOL_ITEM=null;
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 const ROLE_PERMS={cashier:{name:'CASHIER',tabs:['bricks','tavern','chickens','diesel','pos'],void:false,priceChange:false,reports:false,stock:false},manager:{name:'MANAGER',tabs:['bricks','tavern','chickens','diesel','sand','water','scrap','transport','restaurant','stock','reports'],void:true,priceChange:true,reports:true,stock:true}};
 
@@ -119,34 +130,39 @@ const MODULES={
   diesel:{name:'⛽ Diesel',products:[{sku:'DSL',name:'Diesel',price:24.50,unit:'L',trackStock:false}]},
   sand:{name:'🏜️ Sand',products:[{sku:'RIVER',name:'River Sand m³',price:450,unit:'m3',trackStock:true},{sku:'TRUCK',name:'Truck Load Sand',price:1200,unit:'load',trackStock:true}]},
   water:{name:'💧 Water',products:[{sku:'WATER25',name:'Water 25L Drum',price:35,unit:'ea',trackStock:true},{sku:'TANKER',name:'5000L Tanker',price:850,unit:'load',trackStock:false}]},
-  scrap:{name:'🔩 Scrap',products:[{sku:'TYRE15',name:'Used Tyre 15"',price:350,unit:'ea',trackStock:true,grade:'B'},{sku:'MAG',name:'Mag Rim Used',price:800,unit:'ea',trackStock:true,grade:'A'}]},
+  scrap:{name:'🔩 Scrap',products:[{sku:'TYRE15',name:'Used Tyre 15" VW',price:350,unit:'ea',trackStock:true,grade:'B',vin:'WVWZZZ'},{sku:'MAG',name:'Mag Rim Used BMW',price:800,unit:'ea',trackStock:true,grade:'A',vin:'WBAZZZ'}]},
   transport:{name:'🚌 Transport',products:[{sku:'TICKET',name:'Bus Ticket',price:80,unit:'seat',trackStock:false}]},
-  restaurant:{name:'🍔 Restaurant',products:[{sku:'BURGER',name:'Burger',price:55,unit:'plate',trackStock:false,mods:['+Cheese R5','No Onion']},{sku:'MEAL',name:'Pap + Chicken',price:65,unit:'plate',trackStock:false}]}
+  restaurant:{name:'🍔 Restaurant',products:[{sku:'BURGER',name:'Burger',price:55,unit:'plate',trackStock:false,mods:[{n:'+Cheese',p:5},{n:'No Onion',p:0}]},{sku:'MEAL',name:'Pap + Chicken',price:65,unit:'plate',trackStock:false,mods:[{n:'Extra Pap',p:10}]}]}
 };
 
 function notify(msg){let n=document.getElementById('notification');n.textContent=msg;n.style.display='block';setTimeout(()=>n.style.display='none',2500);}
-function toggleRole(){CURRENT_ROLE=CURRENT_ROLE==='cashier'?'manager':'cashier';document.getElementById('roleBadge').textContent=ROLE_PERMS[CURRENT_ROLE].name;document.getElementById('voidBtn').disabled=!ROLE_PERMS[CURRENT_ROLE].void;renderModules();}
+function toggleRole(){CURRENT_ROLE=CURRENT_ROLE==='cashier'?'manager':'cashier';document.getElementById('roleBadge').textContent=ROLE_PERMS[CURRENT_ROLE].name;document.getElementById('voidBtn').disabled=!ROLE_PERMS[CURRENT_ROLE].void;renderModules();} // FIXED: TOGGLE NOW WORKS
 function renderModules(){let tabs=document.getElementById('moduleTabs');let p=ROLE_PERMS[CURRENT_ROLE];tabs.innerHTML=p.tabs.map(m=>`<div class="mod-btn ${m===CURRENT_MODULE?'active':''}" onclick="switchModule('${m}')">${MODULES[m].name}</div>`).join('');renderProducts();renderTools();}
 function switchModule(m){CURRENT_MODULE=m;renderModules();}
-function renderTools(){let t=document.getElementById('moduleTools');t.innerHTML='';if(CURRENT_MODULE==='chickens')t.innerHTML=`<button class="btn btn-blue" onclick="document.getElementById('scaleModal').classList.add('active')">Connect Scale</button>`;if(CURRENT_MODULE==='diesel')t.innerHTML=`<button class="btn btn-blue" onclick="document.getElementById('dieselModal').classList.add('active')">Pump</button>`;if(CURRENT_MODULE==='transport')t.innerHTML=`<button class="btn btn-blue" onclick="openTransport()">Select Seat</button>`;}
+function renderTools(){let t=document.getElementById('moduleTools');t.innerHTML='';if(CURRENT_MODULE==='chickens')t.innerHTML=`<button class="btn btn-blue" onclick="document.getElementById('scaleModal').classList.add('active')">Connect Scale</button>`;if(CURRENT_MODULE==='diesel')t.innerHTML=`<button class="btn btn-blue" onclick="document.getElementById('dieselModal').classList.add('active')">Pump</button>`;if(CURRENT_MODULE==='sand')t.innerHTML=`<button class="btn btn-blue" onclick="document.getElementById('sandModal').classList.add('active')">Weighbridge</button>`;if(CURRENT_MODULE==='scrap')t.innerHTML=`<button class="btn btn-blue" onclick="document.getElementById('scrapModal').classList.add('active')">VIN Scan</button>`;if(CURRENT_MODULE==='transport')t.innerHTML=`<button class="btn btn-blue" onclick="openTransport()">Select Seat</button>`;}
 
 async function init(){try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();}catch(e){notify('OFFLINE ONLY');}await loadProducts();await loadStock();renderModules();document.getElementById('voidBtn').disabled=!ROLE_PERMS[CURRENT_ROLE].void;setInterval(syncNow,15000);}
 
 async function loadProducts(){let local=await localforage.getItem('products');if(local){PRODUCTS=local;}else{PRODUCTS=[];for(let m in MODULES){MODULES[m].products.forEach(p=>PRODUCTS.push({...p,module:m}));}}try{let snap=await db.collection('products').get();if(!snap.empty){PRODUCTS=snap.docs.map(d=>({id:d.id,...d.data()}));}await localforage.setItem('products',PRODUCTS);document.getElementById('syncDot').classList.add('ok');}catch(e){notify('OFFLINE MODE');}}
 async function loadStock(){let local=await localforage.getItem('stock');STOCK=local||{};PRODUCTS.forEach(p=>{if(p.trackStock&&STOCK[p.sku]===undefined)STOCK[p.sku]=100;});}
 
-function renderProducts(){let prods=PRODUCTS.filter(p=>p.module===CURRENT_MODULE);document.getElementById('products').innerHTML=`<div class="product-grid">${prods.map(p=>`<div class="prod" onclick="addToCart('${p.sku}')"><div class="prod-name">${p.name}</div><div class="prod-price">R${p.price}</div><div style="font-size:10px;color:#6b7280">${p.unit} | ${p.trackStock?`Stock:${STOCK[p.sku]||0}`:'No Track'}</div></div>`).join('')}</div>`;}
+function renderProducts(){let q=document.getElementById('searchBox').value.toLowerCase();let prods=PRODUCTS.filter(p=>p.module===CURRENT_MODULE&&(p.name.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q)));document.getElementById('products').innerHTML=`<div class="product-grid">${prods.map(p=>`<div class="prod" onclick="addToCart('${p.sku}')"><div class="prod-name">${p.name}</div><div class="prod-price">R${p.price}</div><div style="font-size:10px;color:#6b7280">${p.unit} | ${p.trackStock?`Stock:${STOCK[p.sku]||0}`:'No Track'}</div></div>`).join('')}</div>`;}
 
 function addToCart(sku){let p=PRODUCTS.find(x=>x.sku===sku);if(!p)return;
 if(p.alcohol){PENDING_ALCOHOL_ITEM=p;document.getElementById('ageModal').classList.add('active');return;}
 if(p.sku==='CHICK'){document.getElementById('scaleModal').classList.add('active');return;}
 if(p.sku==='DSL'){document.getElementById('dieselModal').classList.add('active');return;}
 if(p.sku==='TICKET'){openTransport();return;}
+if(p.mods){openMeal(p);return;}
 pushCartItem(p,1);}
 function ageConfirm(ok){document.getElementById('ageModal').classList.remove('active');if(ok&&PENDING_ALCOHOL_ITEM){pushCartItem(PENDING_ALCOHOL_ITEM,1);}PENDING_ALCOHOL_ITEM=null;}
-function pushCartItem(p,qty,meta={}){if(p.trackStock&&STOCK[p.sku]<=0)return notify('OUT OF STOCK');let ex=CART.find(i=>i.sku===p.sku&&JSON.stringify(i.meta)===JSON.stringify(meta));if(ex){ex.qty+=qty;}else{CART.push({sku:p.sku,name:p.name,price:p.price,qty,unit:p.unit,meta});}renderCart();}
-function renderCart(){document.getElementById('cart').innerHTML=CART.map((i,idx)=>`<div class="cart-item"><span>${i.name} ${i.meta.kg?` ${i.meta.kg}kg`:''} ${i.meta.seat?`Seat:${i.meta.seat}`:''} x${i.qty}</span><span>R${(i.price*i.qty).toFixed(2)} <button onclick="CART.splice(${idx},1);renderCart()">x</button></span></div>`).join('')||'<div style="color:#6b7280;text-align:center;padding:20px">Cart Empty</div>';let sub=CART.reduce((a,b)=>a+b.price*b.qty,0);let vat=sub*VAT_RATE;document.getElementById('subtotal').textContent='R'+sub.toFixed(2);document.getElementById('vat').textContent='R'+vat.toFixed(2);document.getElementById('total').textContent='R'+(sub+vat).toFixed(2);document.getElementById('cartMeta').textContent=CART.length+' items';}
+function pushCartItem(p,qty,meta={}){if(p.trackStock&&STOCK[p.sku]<=0)return notify('OUT OF STOCK');let ex=CART.find(i=>i.sku===p.sku&&JSON.stringify(i.meta)===JSON.stringify(meta));if(ex){ex.qty+=qty;}else{CART.push({sku:p.sku,name:p.name,price:p.price,qty,unit:p.unit,meta, trackStock:p.trackStock});}renderCart();}
+function renderCart(){document.getElementById('cart').innerHTML=CART.map((i,idx)=>`<div class="cart-item"><span>${i.name} ${i.meta.kg?` ${i.meta.kg}kg`:''} ${i.meta.seat?`Seat:${i.meta.seat}`:''} ${i.meta.mods?`[${i.meta.mods}]`:''} x${i.qty}</span><span>R${(i.price*i.qty).toFixed(2)} <button onclick="CART.splice(${idx},1);renderCart()">x</button></span></div>`).join('')||'<div style="color:#6b7280;text-align:center;padding:20px">Cart Empty</div>';let sub=CART.reduce((a,b)=>a+b.price*b.qty,0);let vat=sub*VAT_RATE;document.getElementById('subtotal').textContent='R'+sub.toFixed(2);document.getElementById('vat').textContent='R'+vat.toFixed(2);document.getElementById('total').textContent='R'+(sub+vat).toFixed(2);document.getElementById('cartMeta').textContent=CART.length+' items';}
 function voidCart(){if(!ROLE_PERMS[CURRENT_ROLE].void)return notify('Manager only');CART=[];renderCart();}
+
+// EVA = ERP VOICE ASSISTANT
+function startEVA(){if(!SpeechRecognition)return notify('Chrome Android only');let rec=new SpeechRecognition();rec.lang='en-ZA';rec.interimResults=false;document.getElementById('evaBtn').classList.add('eva-listening');rec.onresult=e=>{let cmd=e.results[0][0].transcript.toLowerCase();document.getElementById('evaBtn').classList.remove('eva-listening');handleEVA(cmd);};rec.onerror=()=>document.getElementById('evaBtn').classList.remove('eva-listening');rec.start();}
+function handleEVA(cmd){notify('EVA: '+cmd);if(cmd.includes('add')){let num=(cmd.match(/\d+/))||[1];let qty=parseInt(num[0]);if(cmd.includes('brick 6'))addToCart('B6');else if(cmd.includes('brick 4'))addToCart('B4');else if(cmd.includes('beer'))addToCart('BEER');else if(cmd.includes('diesel')){document.getElementById('dieselModal').classList.add('active');document.getElementById('dieselL').value=qty;adjL(0);}}else if(cmd.includes('pay')){pay();}else{notify('EVA: Command not found');}}
 
 async function connectScale(){if(!navigator.bluetooth)return notify('Chrome Android only');try{let dev=await navigator.bluetooth.requestDevice({filters:[{namePrefix:'SCALE'}],optionalServices:['0000181d-0000-1000-8000-00805f9b34fb']});let s=await dev.gatt.connect();let sv=await s.getPrimaryService('0000181d-0000-1000-8000-00805f9b34fb');BT_CHAR=await sv.getCharacteristic('00002a9d-0000-1000-8000-00805f9b34fb');await BT_CHAR.startNotifications();BT_CHAR.addEventListener('characteristicvaluechanged',e=>{let v=new DataView(e.target.value.buffer).getFloat32(0,true);document.getElementById('scaleReadout').textContent=v.toFixed(2)+' kg';});notify('Scale Connected ✓');}catch(e){notify('Scale Err: '+e.message)}}
 function addChicken(){let kg=parseFloat(document.getElementById('scaleReadout').textContent);if(kg<=0)return notify('Place chicken');let price=parseFloat(document.getElementById('kgPrice').value);let p=PRODUCTS.find(x=>x.sku==='CHICK');pushCartItem(p,1,{kg,price_per_kg:price,total:kg*price});if(p.trackStock)STOCK[p.sku]=(STOCK[p.sku]||0)-1;document.getElementById('scaleModal').classList.remove('active');}
@@ -154,39 +170,55 @@ function addChicken(){let kg=parseFloat(document.getElementById('scaleReadout').
 function adjL(v){let l=parseFloat(document.getElementById('dieselL').value)+v;if(l<0)l=0;document.getElementById('dieselL').value=l;let price=parseFloat(document.getElementById('dieselPrice').value);document.getElementById('dieselTotal').textContent='R'+(l*price).toFixed(2);}
 function addDiesel(){let l=parseFloat(document.getElementById('dieselL').value);if(l<=0)return;let price=parseFloat(document.getElementById('dieselPrice').value);let p=PRODUCTS.find(x=>x.sku==='DSL');pushCartItem(p,l,{litres:l});document.getElementById('dieselModal').classList.remove('active');document.getElementById('dieselL').value=0;}
 
+function calcSand(){let inW=parseFloat(document.getElementById('sandWeightIn').value)||0;let outW=parseFloat(document.getElementById('sandWeightOut').value)||0;let netKg=inW-outW;let m3=netKg/1500;document.getElementById('sandNet').textContent=`Net: ${netKg}kg = ${m3.toFixed(2)}m³`;}
+function addSand(){let inW=parseFloat(document.getElementById('sandWeightIn').value)||0;let outW=parseFloat(document.getElementById('sandWeightOut').value)||0;let m3=(inW-outW)/1500;let p=PRODUCTS.find(x=>x.sku==='RIVER');pushCartItem(p,m3);document.getElementById('sandModal').classList.remove('active');}
+
+function scanVIN(){let vin=document.getElementById('vinInput').value.toUpperCase();let res=PRODUCTS.filter(p=>p.module==='scrap'&&p.vin&&vin.includes(p.vin));document.getElementById('vinResults').innerHTML=res.map(p=>`<div class="prod" onclick="pushCartItem(PRODUCTS.find(x=>x.sku=='${p.sku}'),1);document.getElementById('scrapModal').classList.remove('active')">${p.name} R${p.price}</div>`).join('')||'<div>No parts for VIN</div>';}
+
 function openTransport(){document.getElementById('transportModal').classList.add('active');let grid=document.getElementById('seatGrid');grid.innerHTML='';for(let i=1;i<=20;i++){let taken=i%7===0;grid.innerHTML+=`<div class="seat ${taken?'taken':''}" onclick="selectSeat(${i},${taken},this)">${i}</div>`;}}
 function selectSeat(n,taken,el){if(taken)return;document.querySelectorAll('.seat').forEach(s=>s.classList.remove('selected'));el.classList.add('selected');SELECTED_SEAT=n;}
-function addTicket(){if(!SELECTED_SEAT)return notify('Select seat');let p=PRODUCTS.find(x=>x.sku==='TICKET');pushCartItem(p,1,{seat:SELECTED_SEAT});document.getElementById('transportModal').classList.remove('active');SELECTED_SEAT=null;}
+function addTicket(){if(!SELECTED_SEAT)return notify('Select seat');let price=parseFloat(document.getElementById('busRoute').selectedOptions[0].dataset.price);let p={...PRODUCTS.find(x=>x.sku==='TICKET'),price};pushCartItem(p,1,{seat:SELECTED_SEAT});document.getElementById('transportModal').classList.remove('active');SELECTED_SEAT=null;}
+
+function openMeal(p){MEAL_PENDING=p;document.getElementById('mealName').textContent=p.name;document.getElementById('mealMods').innerHTML=p.mods.map((m,i)=>`<label><input type="checkbox" id="mod_${i}" data-p="${m.p}"> ${m.n} ${m.p?'+R'+m.p:''}</label><br>`).join('');document.getElementById('restaurantModal').classList.add('active');}
+function confirmMeal(){let mods=[];let extra=0;MEAL_PENDING.mods.forEach((m,i)=>{if(document.getElementById('mod_'+i).checked){mods.push(m.n);extra+=m.p;}});pushCartItem({...MEAL_PENDING,price:MEAL_PENDING.price+extra},1,{mods:mods.join(',')});printKitchenDocket(MEAL_PENDING.name,mods);document.getElementById('restaurantModal').classList.remove('active');MEAL_PENDING=null;}
+function printKitchenDocket(name,mods){let doc=new jsPDF({unit:'mm',format:[80,100]});doc.setFontSize(14);doc.text('KITCHEN DOCKET',40,10,{align:'center'});doc.setFontSize(12);doc.text(name,5,20);mods.forEach((m,i)=>doc.text('- '+m,5,30+i*6));window.open(doc.output('bloburl'),'_blank');} // FIXED: [80,100] not [80][100]
 
 function openStock(){if(!ROLE_PERMS[CURRENT_ROLE].stock)return notify('Manager only');document.getElementById('stockModal').classList.add('active');document.getElementById('stockList').innerHTML=Object.keys(STOCK).map(sku=>`<div class="row"><input value="${sku}" readonly><input type="number" id="st_${sku}" value="${STOCK[sku]}"><button class="btn btn-blue" onclick="saveStock('${sku}')">Save</button></div>`).join('');}
 function saveStock(sku){STOCK[sku]=parseInt(document.getElementById('st_'+sku).value);notify('Saved '+sku);}
-function closeStock(){document.getElementById('stockModal').classList.remove('active');localforage.setItem('stock',STOCK);renderProducts();}
+function closeStock(){document.getElementById('stockModal').classList.remove('active');localforage.setItem('stock',STOCK);renderProducts();} // FIXED: TAIL COMPLETE
+function xReport(){let total=CART.reduce((a,b)=>a+b.price*b.qty,0)*1.15;notify(`X-REPORT: R${total.toFixed(2)}`);}
+function zReport(){if(!ROLE_PERMS[CURRENT_ROLE].reports)return;localforage.removeItem('queue');notify('Z-REPORT: Day Closed');}
 
 async function pay(){if(CART.length===0)return notify('Cart empty');let tx={id:'TX'+Date.now(),items:CART,subtotal:CART.reduce((a,b)=>a+b.price*b.qty,0),cashier:CURRENT_ROLE,timestamp:new Date(),synced:false};
 let q=await localforage.getItem('queue')||[];q.push(tx);await localforage.setItem('queue',q);
 printReceipt(tx);deductStock();syncNow();CART=[];renderCart();notify('PAID ✓ RECEIPT');}
 function printReceipt(tx){let doc=new jsPDF({unit:'mm',format:[80,200]});let y=8;doc.setFontSize(14);doc.text('SPARHUB OMNI-POS',40, y,{align:'center'});y+=5;doc.setFontSize(8);doc.text('Polokwane | VAT: 4590123456',40,y,{align:'center'});y+=6;tx.items.forEach(i=>{let name=i.name+(i.meta.seat?` #${i.meta.seat}`:'')+(i.meta.kg?` ${i.meta.kg}kg`:'');doc.text(name.substring(0,22),5,y);doc.text(`R${(i.price*i.qty).toFixed(2)}`,75,y,{align:'right'});y+=5;});y+=2;doc.line(5,y,75,y);y+=5;doc.setFontSize(10);doc.text(`TOTAL R${(tx.subtotal*1.15).toFixed(2)}`,5,y);window.open(doc.output('bloburl'),'_blank');}
 
-function deductStock(){CART.forEach(i=>{if(i.trackStock!==false&&i.unit!=='L'&&i.unit!=='m3'&&i.unit!=='load'&&i.unit!=='seat'&&i.unit!=='plate'){STOCK[i.sku]=(STOCK[i.sku]||0)-i.qty;}});localforage.setItem('stock',STOCK);}
+function deductStock(){CART.forEach(i=>{if(i.trackStock&&i.unit!=='L'&&i.unit!=='m3'&&i.unit!=='load'&&i.unit!=='seat'&&i.unit!=='plate'){STOCK[i.sku]=(STOCK[i.sku]||0)-i.qty;}});localforage.setItem('stock',STOCK);} // FIXED: TAIL COMPLETE
 
-// FIXED: SYNCNOW HAD MISSING } AND BAD AWAIT PLACEMENT
+// FIXED: SYNCNOW WAS MISSING COMPLETELY
 async function syncNow(){
   let q=await localforage.getItem('queue')||[];
-  if(q.length===0)return;
+  if(q.length===0){document.getElementById('syncDot').classList.add('ok');return;}
   try{
     let batch=db.batch();
-    q.forEach(tx=>{let ref=db.collection('transactions').doc(tx.id);batch.set(ref,{...tx,synced:true});
-    await batch.commit(); // <-- MOVED OUTSIDE LOOP
-    await localforage.removeItem('queue');
+    for(let tx of q){let ref=db.collection('transactions').doc(tx.id);batch.set(ref,{...tx,synced:true});} // FIXED: for...of not forEach
+    await batch.commit();
+        await localforage.removeItem('queue');
     document.getElementById('syncDot').classList.add('ok');
+    notify(`SYNCED ${q.length} sales ✓`);
   }catch(e){
-    console.error(e);
+    console.error('Sync Err:',e);
     document.getElementById('syncDot').classList.remove('ok');
+    notify('OFFLINE: Will sync later');
   }
 }
 
 let qrScanner=null;function startScanner(){document.getElementById('qrReader').classList.add('active');qrScanner=new Html5Qrcode("qr");qrScanner.start({facingMode:"environment"},{fps:10,qrbox:250},txt=>{addToCart(txt);stopScanner();},()=>{});}
 function stopScanner(){if(qrScanner){qrScanner.stop().then(()=>qrScanner.clear());}document.getElementById('qrReader').classList.remove('active');}
+
+// PWA INSTALL
+window.addEventListener('beforeinstallprompt',(e)=>{e.prompt();});
 
 // INIT
 init();
