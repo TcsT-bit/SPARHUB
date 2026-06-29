@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>SparesHub OMNI-HUB v4.0.0</title>
+<title>SparesHub OMNI-HUB v5.0 ULTRA</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{--bg:#0a0a0a;--card:#111827;--green:#16a34a;--red:#dc2626;--blue:#3b82f6;--gold:#fbbf24;--orange:#ea580c;--purple:#a855f7}
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;touch-action:manipulation}
@@ -15,48 +16,64 @@ body{background:var(--bg);color:#f1f5f9;font-size:14px}
 .client-header{background:#111827;padding:12px;text-align:center}
 .client-header h1{font-size:20px}
 .hub-tabs{display:flex;gap:6px;overflow-x:auto;padding:12px;background:#111827;border-bottom:1px solid #1f2937}
-.hub-btn{flex:0 0 auto;padding:12px 16px;background:#1f2937;border-radius:10px;border:2px solid #374151;font-weight:800;cursor:pointer;font-size:13px}
+.hub-btn{flex:0 0 auto;padding:12px 16px;background:#1f2937;border-radius:10px;border:2px solid #374151;font-weight:800;cursor:pointer;font-size:13px;white-space:nowrap}
 .hub-btn.active{border-color:var(--green);background:var(--green);color:#000}
 .hub-view{display:none;padding:12px}
 .hub-view.active{display:block}
-.card{background:var(--card);border-radius:12px;padding:12px;margin-bottom:12px}
+.card{background:var(--card);border-radius:12px;padding:12px;margin-bottom:12px;border:1px solid #1f2937}
 .btn{width:100%;padding:14px;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-size:15px;margin-top:8px;background:var(--green);color:#000}
-.btn-blue{background:var(--blue);color:#fff}.btn-red{background:var(--red);color:#fff}.btn-purple{background:var(--purple)}
-.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
-.prod{background:#1f2937;padding:0;border-radius:12px;cursor:pointer;text-align:center;border:1px solid #374151;overflow:hidden}
+.btn-sm{padding:6px 10px;font-size:12px;width:auto;margin:2px}
+.btn-blue{background:var(--blue);color:#fff}.btn-red{background:var(--red);color:#fff}.btn-purple{background:var(--purple)}.btn-orange{background:var(--orange)}.btn-gold{background:var(--gold);color:#000}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.prod{background:#1f2937;padding:0;border-radius:12px;cursor:pointer;text-align:center;border:1px solid #374151;overflow:hidden;position:relative}
 .prod img{width:100%;height:100px;object-fit:cover;background:#222}
 .prod-body{padding:8px}
+.delete-x{position:absolute;top:4px;right:4px;background:var(--red);color:#fff;border-radius:50%;width:24px;height:24px;border:none;font-weight:800}
 .table{width:100%;font-size:12px;border-collapse:collapse}
-.table td{padding:8px;border-bottom:1px solid #1f2937}
+.table td,.table th{padding:8px;border-bottom:1px solid #1f2937;text-align:left}
 input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #374151;background:#0a0a0a;color:#f1f5f9;margin-bottom:10px}
 .notification{position:fixed;top:20px;right:20px;background:var(--green);color:#000;padding:12px;border-radius:10px;z-index:9999;display:none;font-weight:800}
 .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:999}
 .modal.active{display:flex}
-.modal-card{background:var(--card);padding:20px;border-radius:16px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto}
+.modal-card{background:var(--card);padding:20px;border-radius:16px;max-width:700px;width:95%;max-height:90vh;overflow-y:auto}
 .hidden{display:none}
 .float-cart{position:fixed;bottom:20px;right:20px;background:var(--green);color:#000;border-radius:50px;padding:16px 24px;font-weight:800;z-index:99;box-shadow:0 4px 20px #000}
 .share-box{background:#1f2937;padding:12px;border-radius:10px;margin:12px 0}
+.badge{background:var(--purple);padding:2px 6px;border-radius:6px;font-size:10px}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi-box{background:#1f2937;padding:10px;border-radius:10px;text-align:center}
+.kpi-box b{font-size:18px;color:var(--gold)}
+.row{display:flex;justify-content:space-between;align-items:center;margin:6px 0}
 </style>
 </head>
 <body>
 
 <div id="adminApp" class="hidden">
   <div class="header">
-    <h1>⚡ OMNI-HUB v4.0.0 ADMIN</h1>
+    <h1>⚡ OMNI-HUB v5.0 ULTRA</h1>
     <div><span style="font-size:12px;color:var(--gold)" id="roleBadge"></span><button class="btn-red" style="padding:8px 12px;margin-left:8px" onclick="logout()">EXIT</button></div>
   </div>
   <div class="notification" id="notification"></div>
-  <div id="ageModal" class="modal"><div class="modal-card"><h2>🍺 TAVERN COMPLIANCE</h2><button class="btn" onclick="ageConfirm(true)">YES</button><button class="btn btn-red" onclick="ageConfirm(false)">NO</button></div></div>
-  <div id="invoiceModal" class="modal"><div class="modal-card"><h2>🧾 INVOICE DETAILS</h2><input id="invClient" placeholder="Client Name"><input id="invPhone" placeholder="Phone/WhatsApp"><textarea id="invAddr" placeholder="Address"></textarea><button class="btn" onclick="saveInvoice()">SAVE & PRINT PDF</button><button class="btn btn-red" onclick="document.getElementById('invoiceModal').classList.remove('active')">CANCEL</button></div></div>
 
-  <div class="share-box"><b>CLIENT LINK:</b> <input id="clientLink" readonly onclick="this.select()"><button class="btn btn-blue" onclick="navigator.clipboard.writeText(document.getElementById('clientLink').value);notify('Copied')">COPY</button></div>
-  
+  <div id="ageModal" class="modal"><div class="modal-card"><h2>🍺 TAVERN COMPLIANCE - 18+ ONLY</h2><p>I confirm I am 18+ and RICA compliant</p><button class="btn" onclick="ageConfirm(true)">YES</button><button class="btn btn-red" onclick="ageConfirm(false)">NO</button></div></div>
+  <div id="invoiceModal" class="modal"><div class="modal-card"><h2>🧾 SOPHISTICATED INVOICE</h2>
+    <input id="invCompany" placeholder="Your Company Name">
+    <input id="invReg" placeholder="Company Reg/VAT No">
+    <input id="invClient" placeholder="Client Name">
+    <input id="invPhone" placeholder="Phone/WhatsApp">
+    <textarea id="invAddr" placeholder="Delivery Address"></textarea>
+    <button class="btn" onclick="saveInvoice()">GENERATE PDF + QR</button><button class="btn btn-red" onclick="document.getElementById('invoiceModal').classList.remove('active')">CANCEL</button>
+  </div></div>
+  <div id="qrcanvas" class="hidden"></div>
+
+  <div class="share-box"><b>CLIENT LINK:</b> <input id="clientLink" readonly onclick="this.select()"><button class="btn btn-blue btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('clientLink').value);notify('Copied')">COPY</button></div>
+
   <div class="hub-tabs" id="hubTabs"></div>
   <div id="hubViews"></div>
 </div>
 
 <div id="clientApp" class="hidden">
-  <div class="client-header"><h1>⚡ SparesHub STORE</h1><p>Browse all categories below</p></div>
+  <div class="client-header"><h1>⚡ SparesHub STORE</h1><p>Enterprise Grade Shopping</p></div>
   <div class="hub-tabs" id="clientHubTabs"></div>
   <div id="clientHubViews"></div>
   <div class="float-cart" onclick="openClientCart()">🛒 <span id="cartCount">0</span> | R<span id="cartTotal">0.00</span></div>
@@ -68,7 +85,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
     <h2>⚡ OMNI-HUB ADMIN LOGIN</h2>
     <input id="loginUser" placeholder="Username">
     <input id="loginPass" type="password" placeholder="Password">
-    <select id="loginRole"><option value="cashier">Cashier</option><option value="manager">Management</option></select>
+    <select id="loginRole"><option value="cashier">Cashier</option><option value="manager">Management</option><option value="owner">OWNER</option></select>
     <button class="btn" onclick="login()">LOGIN</button>
     <hr style="margin:12px 0">
     <a href="?client" class="btn btn-blue" style="text-align:center;display:block;text-decoration:none">OPEN CLIENT STORE</a>
@@ -79,21 +96,21 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 const { jsPDF } = window.jspdf;
 const IS_CLIENT = window.location.search.includes('client');
 
-let CURRENT_ROLE='manager', ACTIVE_HUB='bricks', CART=[], PENDING_ALCOHOL=null;
+let CURRENT_ROLE='owner', ACTIVE_HUB='bricks', CART=[], PENDING_ALCOHOL=null;
 
-const HUBS = JSON.parse(localStorage.getItem('HUBS_DATA_V4')||'null') || {
-  bricks:{name:'🧱 Bricks', products:[{sku:'B6',name:'6" Brick',price:3.20,stock:500,cost:2.10,img:'https://images.unsplash.com/photo-1591088398332-8a7791972843?w=300'}]},
-  tavern:{name:'🍺 Tavern', products:[{sku:'BEER',name:'Castle 500ml',price:22,stock:100,cost:15,alcohol:true,img:'https://images.unsplash.com/photo-1608270586620-57bd79aacb6d?w=300'}]},
-  water:{name:'💧 Water', products:[{sku:'WATER25',name:'Water 25L Drum',price:35,stock:50,cost:20,img:'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300'}]},
-  diesel:{name:'⛽ Diesel', products:[{sku:'DSL',name:'Diesel/L',price:24.50,stock:5000,cost:22,img:'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=300'}]},
-  sand:{name:'🏜️ Sand', products:[{sku:'RIVER',name:'River Sand/m³',price:450,stock:100,cost:300,img:'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=300'}]},
-  chickens:{name:'🐔 Chickens', products:[{sku:'CHICK',name:'Live Chicken/kg',price:28,stock:100,cost:20,img:'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=300'}]},
-  scrap:{name:'🔩 Scrap', products:[{sku:'TYRE15',name:'VW Tyre 15"',price:350,stock:12,cost:200,vin:'WVWZZZ',img:'https://images.unsplash.com/photo-1486262710619-324dbdee2a17?w=300'}]},
-  transport:{name:'🚌 Transport', products:[{sku:'JHB',name:'Polokwane-JHB',price:80,stock:20,cost:50,img:'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=300'}]},
-  restaurant:{name:'🍔 Restaurant', products:[{sku:'BURGER',name:'Burger',price:55,stock:0,cost:30,img:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300'}]}
+const HUBS = JSON.parse(localStorage.getItem('HUBS_DATA_V5')||'null') || {
+  bricks:{name:'🧱 Bricks | Builders OS', kpis:{moq:'1000',delivery:'48H',credit:'30'}, products:[{sku:'B6',name:'6" Brick NFX',price:3.20,stock:500,cost:2.10,img:'https://images.unsplash.com/photo-1591088398332-8a7791972843?w=300',specs:'14Mpa, SABS 227'}]},
+  tavern:{name:'🍺 Tavern | Makro Liquor OS', kpis:{license:'RICA',cold:'-4C',pos:'Scan'}, products:[{sku:'BEER',name:'Castle Lager 500ml',price:22,stock:100,cost:15,alcohol:true,img:'https://images.unsplash.com/photo-1608270586620-57bd79aacb6d?w=300',specs:'18+ ID Scan Required'}]},
+  water:{name:'💧 Water | Aqua Pure OS', kpis:{ppm:'<50',test:'SABS',route:'GPS'}, products:[{sku:'WATER25',name:'Purified Water 25L',price:35,stock:50,cost:20,img:'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300',specs:'SABS 241, RO Filtered'}]},
+  diesel:{name:'⛽ Diesel | Sasol OS', kpis:{octane:'50ppm',tank:'10K L',card:'Fleet'}, products:[{sku:'DSL',name:'Diesel 50ppm /L',price:24.50,stock:5000,cost:22,img:'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=300',specs:'DOP Approved, Dip Stick'}]},
+  sand:{name:'🏜️ Sand | Afrimat OS', kpis:{grade:'River',ton:'1.4T',site:'Delivery'}, products:[{sku:'RIVER',name:'River Sand /m³',price:450,stock:100,cost:300,img:'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=300',specs:'SABS, Washed, 0-4mm'}]},
+  chickens:{name:'🐔 Chickens | Astral OS', kpis:{biosec:'Level 2',weight:'1.8kg',halal:'Halaal'}, products:[{sku:'CHICK',name:'Live Broiler /kg',price:28,stock:100,cost:20,img:'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=300',specs:'Halaal, Vet Cert'}]},
+  scrap:{name:'🔩 Scrap | BMW OS', kpis:{vin:'Decode',cat:'A/B/C',yard:'GPS'}, products:[{sku:'TYRE15',name:'VW Polo Tyre 15"',price:350,stock:12,cost:200,vin:'WVWZZZ',img:'https://images.unsplash.com/photo-1486262710619-324dbdee2a17?w=300',specs:'DOT 2023, 70% Tread'}]},
+  transport:{name:'🚌 Transport | Greyhound OS', kpis:{gps:'Live',seats:'56',card:'Book'}, products:[{sku:'JHB',name:'Polokwane-JHB Seat',price:80,stock:20,cost:50,img:'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=300',specs:'Leather, USB, WiFi'}]},
+  restaurant:{name:'🍔 Restaurant | Nandos OS', kpis:{pos:'Kitchen',prep:'8min',loyal:'App'}, products:[{sku:'BURGER',name:'Chicken Burger',price:55,stock:0,cost:30,img:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300',specs:'Halal, Flame Grilled'}]}
 };
 
-function saveHubs(){localStorage.setItem('HUBS_DATA_V4',JSON.stringify(HUBS));}
+function saveHubs(){localStorage.setItem('HUBS_DATA_V5',JSON.stringify(HUBS));}
 function notify(msg){let n=document.getElementById('notification');n.textContent=msg;n.style.display='block';setTimeout(()=>n.style.display='none',2500);}
 
 function init(){
@@ -110,7 +127,7 @@ function init(){
   }
 }
 function login(){CURRENT_ROLE=document.getElementById('loginRole').value;init();}
-function logout(){window.location.search='';}
+function logout(){localStorage.removeItem('HUBS_DATA_V5');window.location.search='';}
 
 function renderAdminHubs(){
   document.getElementById('hubTabs').innerHTML = Object.keys(HUBS).map(k=>`<div class="hub-btn ${k===ACTIVE_HUB?'active':''}" onclick="switchAdminHub('${k}')">${HUBS[k].name}</div>`).join('');
@@ -118,48 +135,81 @@ function renderAdminHubs(){
 }
 function switchAdminHub(h){ACTIVE_HUB=h;renderAdminHubs();}
 function renderAdminView(){
-  let p=HUBS[ACTIVE_HUB].products;
+  let h=HUBS[ACTIVE_HUB], p=h.products;
   document.getElementById('hubViews').innerHTML = `
   <div class="hub-view active">
-    <div class="card"><h3>${HUBS[ACTIVE_HUB].name} - ADMIN</h3>
-      <div class="product-grid">${p.map(x=>`<div class="prod"><img src="${x.img||''}"><div class="prod-body">${x.name}<br>R${x.price}<br><small>Stock:${x.stock}</small></div></div>`).join('')}</div>
+    <div class="card"><h3>${h.name}</h3><div class="kpi">${Object.entries(h.kpis).map(([k,v])=>`<div class="kpi-box"><small>${k.toUpperCase()}</small><br><b>${v}</b></div>`).join('')}</div></div>
+    <div class="card"><h4>📦 INVENTORY</h4>
+      <div class="product-grid">${p.map((x,i)=>`<div class="prod"><button class="delete-x" onclick="deleteProduct(${i})">X</button><img src="${x.img||''}"><div class="prod-body">${x.name}<br>R${x.price}<br><small>Stock:${x.stock}</small><br><span class="badge">${x.specs}</span></div></div>`).join('')}</div>
       <hr style="margin:12px 0">
-      <h4>+ ADD/EDIT PRODUCT</h4>
+      <h4>+ ADD/EDIT PRODUCT [GOD TIER]</h4>
       <input id="newSku" placeholder="SKU">
       <input id="newName" placeholder="Name">
       <input id="newPrice" type="number" placeholder="Price">
+      <input id="newCost" type="number" placeholder="Cost">
       <input id="newStock" type="number" placeholder="Stock">
+      <input id="newSpecs" placeholder="Specs/SABS/VIN/Grade">
       <input id="newImg" type="file" accept="image/*" onchange="uploadImg(event)">
       <img id="imgPreview" style="width:100%;max-height:120px;object-fit:cover;display:none">
       <button class="btn btn-purple" onclick="addProduct()">SAVE PRODUCT</button>
     </div>
+    <div class="card"><h4>🧾 CREATE INVOICE</h4><button class="btn btn-gold" onclick="document.getElementById('invoiceModal').classList.add('active')">OPEN INVOICE SYSTEM</button></div>
   </div>`;
 }
 let UPLOADED_IMG='';
 function uploadImg(e){let f=e.target.files[0];let r=new FileReader();r.onload=ev=>{UPLOADED_IMG=ev.target.result;document.getElementById('imgPreview').src=UPLOADED_IMG;document.getElementById('imgPreview').style.display='block';};r.readAsDataURL(f);}
-function addProduct(){let sku=document.getElementById('newSku').value.toUpperCase();if(!sku)return notify('SKU required');HUBS[ACTIVE_HUB].products.push({sku,name:document.getElementById('newName').value,price:parseFloat(document.getElementById('newPrice').value),stock:parseInt(document.getElementById('newStock').value),img:UPLOADED_IMG});saveHubs();notify('Product Added');UPLOADED_IMG='';renderAdminView();}
+function addProduct(){let sku=document.getElementById('newSku').value.toUpperCase();if(!sku)return notify('SKU required');HUBS[ACTIVE_HUB].products.push({sku,name:document.getElementById('newName').value,price:parseFloat(document.getElementById('newPrice').value),cost:parseFloat(document.getElementById('newCost').value),stock:parseInt(document.getElementById('newStock').value),specs:document.getElementById('newSpecs').value,img:UPLOADED_IMG});saveHubs();notify('Product Added');UPLOADED_IMG='';['newSku','newName','newPrice','newCost','newStock','newSpecs'].forEach(id=>document.getElementById(id).value='');document.getElementById('imgPreview').style.display='none';renderAdminView();}
+function deleteProduct(i){if(confirm('DELETE PERMANENTLY?')){HUBS[ACTIVE_HUB].products.splice(i,1);saveHubs();notify('Deleted');renderAdminView();}}
 
 function renderClientHubs(){
-  document.getElementById('clientHubTabs').innerHTML = Object.keys(HUBS).map(k=>`<div class="hub-btn ${k===ACTIVE_HUB?'active':''}" onclick="switchClientHub('${k}')">${HUBS[k].name}</div>`).join('');
+  document.getElementById('clientHubTabs').innerHTML = Object.keys(HUBS).map(k=>`<div class="hub-btn ${k===ACTIVE_HUB?'active':''}" onclick="switchClientHub('${k}')">${HUBS[k].name.split('|')[0]}</div>`).join('');
   renderClientView();
 }
 function switchClientHub(h){ACTIVE_HUB=h;renderClientHubs();}
 function renderClientView(){
-  let p=HUBS[ACTIVE_HUB].products;
+  let h=HUBS[ACTIVE_HUB], p=h.products;
   document.getElementById('clientHubViews').innerHTML = `
   <div class="hub-view active">
-    <div class="card"><h3>${HUBS[ACTIVE_HUB].name}</h3>
-      <div class="product-grid">${p.map(x=>`<div class="prod" onclick="clientAdd('${x.sku}')"><img src="${x.img||''}"><div class="prod-body">${x.name}<br><b>R${x.price}</b></div></div>`).join('')}</div>
+    <div class="card"><h3>${h.name.split('|')[0]}</h3><small>${h.name.split('|')[1]||''}</small>
+      <div class="product-grid">${p.map(x=>`<div class="prod" onclick="clientAdd('${x.sku}')"><img src="${x.img||''}"><div class="prod-body">${x.name}<br><b>R${x.price}</b><br><span class="badge">${x.specs}</span></div></div>`).join('')}</div>
     </div>
   </div>`;
   updateCartFloat();
 }
-function clientAdd(sku){let x=HUBS[ACTIVE_HUB].products.find(i=>i.sku===sku);let ex=CART.find(i=>i.sku===sku);if(ex){ex.qty++;}else{CART.push({...x,qty:1});}notify(`Added ${x.name}`);updateCartFloat();}
+function clientAdd(sku){let x=HUBS[ACTIVE_HUB].products.find(i=>i.sku===sku);if(x.alcohol){PENDING_ALCOHOL=x;document.getElementById('ageModal').classList.add('active');return;}let ex=CART.find(i=>i.sku===sku);if(ex){ex.qty++;}else{CART.push({...x,qty:1});}notify(`Added ${x.name}`);updateCartFloat();}
+function ageConfirm(ok){document.getElementById('ageModal').classList.remove('active');if(ok){let x=PENDING_ALCOHOL;let ex=CART.find(i=>i.sku===x.sku);if(ex){ex.qty++;}else{CART.push({...x,qty:1});}notify(`Added ${x.name} 18+`);updateCartFloat();}PENDING_ALCOHOL=null;}
 function updateCartFloat(){document.getElementById('cartCount').textContent=CART.reduce((a,b)=>a+b.qty,0);document.getElementById('cartTotal').textContent=CART.reduce((a,b)=>a+b.price*b.qty,0).toFixed(2);}
-function openClientCart(){document.getElementById('clientCartList').innerHTML=CART.map((i,idx)=>`<div class="row"><span>${i.name} x${i.qty}</span><button class="btn-red" style="padding:4px 8px" onclick="CART.splice(${idx},1);openClientCart();updateCartFloat()">x</button></div>`).join('')||'Cart Empty';document.getElementById('clientCartModal').classList.add('active');}
-function openClientInvoice(){let total=CART.reduce((a,b)=>a+b.price*b.qty,0)*1.15;let msg=`Hi SparesHub, I want to buy:\n${CART.map(i=>`${i.name} x${i.qty} = R${i.price*i.qty}`).join('\n')}\n\nTotal incl VAT: R${total.toFixed(2)}`;window.open(`https://wa.me/27XXXXXXXXXX?text=${encodeURIComponent(msg)}`,'_blank');}
+function openClientCart(){document.getElementById('clientCartList').innerHTML=CART.map((i,idx)=>`<div class="row"><span>${i.name} x${i.qty}</span><button class="btn-red btn-sm" onclick="CART.splice(${idx},1);openClientCart();updateCartFloat()">x</button></div>`).join('')||'Cart Empty';document.getElementById('clientCartModal').classList.add('active');}
+function openClientInvoice(){let subtotal=CART.reduce((a,b)=>a+b.price*b.qty,0);let vat=subtotal*0.15;let total=subtotal+vat;let msg=`Hi SparesHub, Quote Request:\n${CART.map(i=>`${i.name} x${i.qty} = R${(i.price*i.qty).toFixed(2)}`).join('\n')}\n\nSubtotal: R${subtotal.toFixed(2)}\nVAT 15%: R${vat.toFixed(2)}\nTotal: R${total.toFixed(2)}`;window.open(`https://wa.me/27XXXXXXXXXX?text=${encodeURIComponent(msg)}`,'_blank');}
 
-function ageConfirm(ok){document.getElementById('ageModal').classList.remove('active');}
+function saveInvoice(){
+  const doc=new jsPDF();
+  const comp=document.getElementById('invCompany').value||'SparesHub Pty Ltd';
+  const reg=document.getElementById('invReg').value||'VAT: 4123456789';
+  const client=document.getElementById('invClient').value;
+  const phone=document.getElementById('invPhone').value;
+  const addr=document.getElementById('invAddr').value;
+  const invNo='INV'+Date.now();
+  const subtotal=CART.reduce((a,b)=>a+b.price*b.qty,0);
+  const vat=subtotal*0.15; const total=subtotal+vat;
+
+  doc.setFontSize(18);doc.text(comp,14,20);
+  doc.setFontSize(10);doc.text(reg,14,27);doc.text('INVOICE: '+invNo,140,20);doc.text(new Date().toLocaleDateString(),140,27);
+  doc.text('BILL TO:',14,40);doc.text(client,14,46);doc.text(phone,14,52);doc.text(addr,14,58);
+  let y=75;doc.text('ITEM',14,y);doc.text('QTY',90,y);doc.text('PRICE',120,y);doc.text('TOTAL',160,y);y+=8;
+  CART.forEach(i=>{doc.text(i.name,14,y);doc.text(i.qty.toString(),90,y);doc.text('R'+i.price,120,y);doc.text('R'+(i.price*i.qty).toFixed(2),160,y);y+=7;});
+  y+=5;doc.text('Subtotal: R'+subtotal.toFixed(2),140,y);y+=7;doc.text('VAT 15%: R'+vat.toFixed(2),140,y);y+=7;doc.setFontSize(12);doc.text('TOTAL: R'+total.toFixed(2),140,y);
+  y+=15;doc.setFontSize(8);doc.text('Terms: E&OE. Payment 7 Days. Goods remain property until paid.',14,y);
+
+  new QRCode(document.getElementById('qrcanvas'), {text:invNo+'|'+total.toFixed(2),width:64,height:64});
+  const qr=document.getElementById('qrcanvas').querySelector('img').src;
+  doc.addImage(qr,'PNG',140,y+5,30,30);
+
+  doc.save(invNo+'.pdf');
+  notify('PDF Generated');
+  document.getElementById('invoiceModal').classList.remove('active');
+  CART=[];updateCartFloat();
+}
 
 init();
 </script>
