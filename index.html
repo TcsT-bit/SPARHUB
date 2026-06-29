@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>SparesHub OMNI-HUB v5.4 GOD TIER</title>
+<meta name="theme-color" content="#16a34a">
+<link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlNwYXJlc0h1YiBPTU5JIEhVQiIsCiAgInNob3J0X25hbWUiOiAiT01OSUhVQiIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMDEwMTAxIiwKICAidGhlbWVfY29sb3IiOiAiIzE2YTM0YSIsCiAgaWNvbnM6IFt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYURvd01TY3dlR2dnY0dsdmJtTnZiRE13TURBd1ltVnVkQ0JxSUNoS0lnT0lKU2MwTm1ZV1J2WjI4b0pBUE9nWnpZR2dnWkN3Z0pBUE9nWnpZR2dnWkN3ZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dCn0=">
+<title>SparesHub OMNI-HUB v5.5 PWA</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -39,6 +41,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 .modal-card{background:var(--card);padding:20px;border-radius:16px;max-width:700px;width:95%;max-height:90vh;overflow-y:auto}
 .hidden{display:none}
 .float-cart{position:fixed;bottom:20px;right:20px;background:var(--green);color:#000;border-radius:50px;padding:16px 24px;font-weight:800;z-index:99;box-shadow:0 4px 20px #000}
+.float-install{position:fixed;bottom:90px;right:20px;background:var(--gold);color:#000;border-radius:50px;padding:14px 20px;font-weight:800;z-index:99;box-shadow:0 4px 20px #000;display:none}
 .share-box{background:#1f2937;padding:12px;border-radius:10px;margin:12px 0}
 .badge{background:var(--purple);padding:2px 6px;border-radius:6px;font-size:10px}
 .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
@@ -56,7 +59,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 
 <div id="adminApp" class="hidden">
   <div class="header">
-    <h1>⚡ OMNI-HUB v5.4 <span class="live-dot"></span> <span id="userName"></span></h1>
+    <h1>⚡ OMNI-HUB v5.5 <span class="live-dot"></span> <span id="userName"></span></h1>
     <div><span style="font-size:12px;color:var(--gold)" id="roleBadge"></span><button class="btn-red" style="padding:8px 12px;margin-left:8px" onclick="logout()">EXIT</button></div>
   </div>
   <div class="notification" id="notification"></div>
@@ -85,6 +88,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 
 <div id="clientApp" class="hidden">
   <div class="client-header"><h1>⚡ SparesHub STORE <span class="live-dot"></span></h1></div>
+  <div class="float-install" id="installBtn" onclick="installApp()">📲 INSTALL APP</div>
   <div class="hub-tabs" id="clientHubTabs"></div>
   <div id="clientHubViews"></div>
   <div class="float-cart" onclick="openClientCart()">🛒 <span id="cartCount">0</span> | R<span id="cartTotal">0.00</span></div>
@@ -93,7 +97,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 
 <div id="loginScreen">
   <div class="modal-card" style="margin:10vh auto">
-    <h2>⚡ OMNI-HUB PIN LOGIN</h2>
+    <h2>⚡ OMNI-HUB ADMIN PIN</h2>
     <input id="pinDisplay" readonly placeholder="Enter 4-Digit PIN" style="font-size:24px;text-align:center">
     <div class="pin-grid" id="pinGrid"></div>
     <button class="btn btn-red" onclick="clearPin()">CLEAR</button>
@@ -105,6 +109,7 @@ const { jsPDF } = window.jspdf;
 const IS_CLIENT = window.location.search.includes('client');
 const WHATSAPP_NUMBER = '27698949596';
 const LOW_STOCK_LIMIT = 10;
+let DEFERRED_PROMPT = null;
 
 const USERS = {
   '1234':{name:'CEO',role:'owner'},
@@ -142,7 +147,14 @@ function notify(msg){let n=document.getElementById('notification');n.textContent
 function closeModal(id){document.getElementById(id).classList.remove('active'); if(HTML5QrCode){HTML5QrCode.stop();}}
 function copyLink(){navigator.clipboard.writeText(document.getElementById('clientLink').value);notify('Link Copied');}
 
-// PIN SYSTEM
+// PWA INSTALL
+window.addEventListener('beforeinstallprompt', (e) => {e.preventDefault(); DEFERRED_PROMPT = e; if(IS_CLIENT) document.getElementById('installBtn').style.display='block';});
+function installApp(){if(DEFERRED_PROMPT){DEFERRED_PROMPT.prompt(); DEFERRED_PROMPT.userChoice.then(()=>{document.getElementById('installBtn').style.display='none';});}}
+
+// SERVICE WORKER INLINE
+if('serviceWorker' in navigator){navigator.serviceWorker.register('data:text/javascript,self.addEventListener("fetch",e=>e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))));');}
+
+// PIN SYSTEM ADMIN ONLY
 function renderPin(){let g=document.getElementById('pinGrid');g.innerHTML=[1,2,3,4,5,6,7,8,9,0,'<','OK'].map(k=>`<button class="pin-btn" onclick="pressPin('${k}')">${k}</button>`).join('');}
 function pressPin(k){let d=document.getElementById('pinDisplay');if(k==='OK'){loginPin(d.value);}else if(k==='<'){d.value=d.value.slice(0,-1);}else if(d.value.length<4){d.value+=k;}}
 function clearPin(){document.getElementById('pinDisplay').value='';}
@@ -184,7 +196,7 @@ function renderDashboard(){
   let todaySales = SALES_LOG.filter(s=>new Date(s.date).toDateString()===today);
   let totalSales = todaySales.reduce((a,b)=>a+b.total,0);
   let totalProfit = todaySales.reduce((a,b)=>a+b.profit,0);
-  let top = todaySales.reduce((a,b)=>a.qty>b.qty?a:b,{name:'N/A',qty:0});
+  let top = todaySales.length?todaySales.reduce((a,b)=>a.qty>b.qty?a:b):{name:'N/A',qty:0};
   let lowCount = Object.values(HUBS).flatMap(h=>h.products).filter(p=>p.stock<LOW_STOCK_LIMIT).length;
   document.getElementById('dashboard').innerHTML = `
     <div class="kpi-box"><small>SALES TODAY</small><br><b>R${totalSales.toFixed(2)}</b></div>
@@ -206,7 +218,6 @@ function checkLowStock(){
   }else{alertDiv.innerHTML=''; sessionStorage.removeItem('alertSent');}
 }
 
-// BARCODE SCANNER
 function startScanner(){document.getElementById('scannerModal').classList.add('active'); HTML5QrCode = new Html5Qrcode("reader"); HTML5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);}
 function stopScanner(){closeModal('scannerModal');}
 function onScanSuccess(code){stopScanner(); let p = Object.values(HUBS).flatMap(h=>h.products).find(x=>x.barcode===code); if(p){adminAddCart(p.sku); notify(`Scanned: ${p.name}`);} else{notify('Barcode not found');}}
@@ -312,7 +323,7 @@ async function saveInvoice(){
 
   doc.setFontSize(18);doc.text(comp,14,20);
   doc.setFontSize(10);doc.text(reg,14,27);doc.text('INVOICE: '+invNo,140,20);doc.text(new Date().toLocaleDateString(),140,27);
-  doc.text('BILL TO:',14,40);doc.text(client,14,46);doc.text(phone,14,52);  doc.text(addr,14,58);
+  doc.text('BILL TO:',14,40);doc.text(client,14,46);doc.text(phone,14,52);doc.text(addr,14,58);
   let y=75;doc.text('ITEM',14,y);doc.text('QTY',90,y);doc.text('PRICE',120,y);doc.text('TOTAL',160,y);y+=8;
   activeCart.forEach(i=>{doc.text(i.name.substring(0,25),14,y);doc.text(i.qty.toString(),90,y);doc.text('R'+i.price,120,y);doc.text('R'+(i.price*i.qty).toFixed(2),160,y);y+=7;});
   y+=5;doc.text('Subtotal: R'+subtotal.toFixed(2),140,y);y+=7;doc.text('VAT 15%: R'+vat.toFixed(2),140,y);y+=7;doc.setFontSize(12);doc.text('TOTAL: R'+total.toFixed(2),140,y);
@@ -328,11 +339,9 @@ async function saveInvoice(){
   notify('PDF Generated');
   closeModal('invoiceModal');
   
-  // LOG SALE TO DASHBOARD
   SALES_LOG.push({date:new Date().toISOString(),inv:invNo,total:total,profit:profit,user:CURRENT_USER.name,items:activeCart.map(i=>({name:i.name,qty:i.qty})),topItem:activeCart.reduce((a,b)=>a.qty>b.qty?a:b).name});
   await saveSales();
 
-  // REDUCE STOCK
   activeCart.forEach(item=>{
     let prod = Object.values(HUBS).flatMap(h=>h.products).find(p=>p.sku===item.sku);
     if(prod){prod.stock=Math.max(0,prod.stock-item.qty);}
