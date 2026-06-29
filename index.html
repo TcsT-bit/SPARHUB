@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>SparesHub OMNI-HUB v5.1 FIREBASE</title>
+<title>SparesHub OMNI-HUB v5.2 GOD TIER</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -22,13 +22,16 @@ body{background:var(--bg);color:#f1f5f9;font-size:14px}
 .hub-view.active{display:block}
 .card{background:var(--card);border-radius:12px;padding:12px;margin-bottom:12px;border:1px solid #1f2937}
 .btn{width:100%;padding:14px;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-size:15px;margin-top:8px;background:var(--green);color:#000}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
 .btn-sm{padding:6px 10px;font-size:12px;width:auto;margin:2px}
 .btn-blue{background:var(--blue);color:#fff}.btn-red{background:var(--red);color:#fff}.btn-purple{background:var(--purple)}.btn-orange{background:var(--orange)}.btn-gold{background:var(--gold);color:#000}
 .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
 .prod{background:#1f2937;padding:0;border-radius:12px;cursor:pointer;text-align:center;border:1px solid #374151;overflow:hidden;position:relative}
 .prod img{width:100%;height:100px;object-fit:cover;background:#222}
 .prod-body{padding:8px}
-.delete-x{position:absolute;top:4px;right:4px;background:var(--red);color:#fff;border-radius:50%;width:24px;height:24px;border:none;font-weight:800}
+.delete-x{position:absolute;top:4px;right:4px;background:var(--red);color:#fff;border-radius:50%;width:24px;height:24px;border:none;font-weight:800;z-index:2}
+.stock-controls{display:flex;gap:4px;margin-top:6px}
+.stock-controls.btn-sm{flex:1}
 .table{width:100%;font-size:12px;border-collapse:collapse}
 .table td,.table th{padding:8px;border-bottom:1px solid #1f2937;text-align:left}
 input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #374151;background:#0a0a0a;color:#f1f5f9;margin-bottom:10px}
@@ -52,23 +55,23 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 
 <div id="adminApp" class="hidden">
   <div class="header">
-    <h1>⚡ OMNI-HUB v5.1 <span class="live-dot"></span> LIVE</h1>
+    <h1>⚡ OMNI-HUB v5.2 <span class="live-dot"></span> LIVE</h1>
     <div><span style="font-size:12px;color:var(--gold)" id="roleBadge"></span><button class="btn-red" style="padding:8px 12px;margin-left:8px" onclick="logout()">EXIT</button></div>
   </div>
   <div class="notification" id="notification"></div>
 
   <div id="ageModal" class="modal"><div class="modal-card"><h2>🍺 TAVERN COMPLIANCE - 18+ ONLY</h2><p>I confirm I am 18+ and RICA compliant</p><button class="btn" onclick="ageConfirm(true)">YES</button><button class="btn btn-red" onclick="ageConfirm(false)">NO</button></div></div>
   <div id="invoiceModal" class="modal"><div class="modal-card"><h2>🧾 SOPHISTICATED INVOICE</h2>
-    <input id="invCompany" placeholder="Your Company Name">
-    <input id="invReg" placeholder="Company Reg/VAT No">
-    <input id="invClient" placeholder="Client Name">
-    <input id="invPhone" placeholder="Phone/WhatsApp">
-    <textarea id="invAddr" placeholder="Delivery Address"></textarea>
-    <button class="btn" onclick="saveInvoice()">GENERATE PDF + QR</button><button class="btn btn-red" onclick="document.getElementById('invoiceModal').classList.remove('active')">CANCEL</button>
+    <input id="invCompany" placeholder="Your Company Name" value="SparesHub Pty Ltd">
+    <input id="invReg" placeholder="Company Reg/VAT No" value="VAT: 4123456789">
+    <input id="invClient" placeholder="Client Name" required>
+    <input id="invPhone" placeholder="Phone/WhatsApp" required>
+    <textarea id="invAddr" placeholder="Delivery Address" required></textarea>
+    <button class="btn" onclick="saveInvoice()">GENERATE PDF + QR</button><button class="btn btn-red" onclick="closeModal('invoiceModal')">CANCEL</button>
   </div></div>
   <div id="qrcanvas" class="hidden"></div>
 
-  <div class="share-box"><b>CLIENT LINK:</b> <input id="clientLink" readonly onclick="this.select()"><button class="btn btn-blue btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('clientLink').value);notify('Copied')">COPY</button></div>
+  <div class="share-box"><b>CLIENT LINK:</b> <input id="clientLink" readonly onclick="this.select()"><button class="btn btn-blue btn-sm" onclick="copyLink()">COPY</button></div>
 
   <div class="hub-tabs" id="hubTabs"></div>
   <div id="hubViews"></div>
@@ -79,7 +82,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
   <div class="hub-tabs" id="clientHubTabs"></div>
   <div id="clientHubViews"></div>
   <div class="float-cart" onclick="openClientCart()">🛒 <span id="cartCount">0</span> | R<span id="cartTotal">0.00</span></div>
-  <div id="clientCartModal" class="modal"><div class="modal-card"><h2>🛒 YOUR CART</h2><div id="clientCartList"></div><button class="btn" onclick="openClientInvoice()">GET QUOTE ON WHATSAPP</button><button class="btn btn-red" onclick="document.getElementById('clientCartModal').classList.remove('active')">CLOSE</button></div></div>
+  <div id="clientCartModal" class="modal"><div class="modal-card"><h2>🛒 YOUR CART</h2><div id="clientCartList"></div><button class="btn" onclick="openClientInvoice()">GET QUOTE ON WHATSAPP</button><button class="btn btn-red" onclick="closeModal('clientCartModal')">CLOSE</button></div></div>
 </div>
 
 <div id="loginScreen">
@@ -98,7 +101,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 const { jsPDF } = window.jspdf;
 const IS_CLIENT = window.location.search.includes('client');
 
-// ===== STEP 1: PASTE YOUR FIREBASE CONFIG HERE =====
+// ===== YOUR FIREBASE CONFIG - ALREADY INJECTED =====
 const firebaseConfig = {
     apiKey: "AIzaSyDU3m6DUDpXugBs-PW4Aqn_WvbbHbGq6mg",
     authDomain: "omega---dms.firebaseapp.com",
@@ -128,11 +131,13 @@ const DEFAULT_HUBS = {
 };
 
 function notify(msg){let n=document.getElementById('notification');n.textContent=msg;n.style.display='block';setTimeout(()=>n.style.display='none',2500);}
+function closeModal(id){document.getElementById(id).classList.remove('active');}
+function copyLink(){navigator.clipboard.writeText(document.getElementById('clientLink').value);notify('Link Copied');}
 
 async function loadHubs(){
   const doc = await db.collection('omnihub').doc('hubs').get();
   if(doc.exists){HUBS=doc.data();}else{HUBS=DEFAULT_HUBS;await db.collection('omnihub').doc('hubs').set(HUBS);}
-  renderAdminHubs(); renderClientHubs();
+  if(IS_CLIENT){renderClientHubs();}else{renderAdminHubs();}
 }
 async function saveHubs(){await db.collection('omnihub').doc('hubs').set(HUBS);}
 
@@ -141,18 +146,20 @@ function init(){
     document.getElementById('clientApp').classList.remove('hidden');
     document.getElementById('loginScreen').classList.add('hidden');
     loadHubs();
-    db.collection('omnihub').doc('hubs').onSnapshot(loadHubs); // REALTIME
+    db.collection('omnihub').doc('hubs').onSnapshot(loadHubs);
   }else{
     document.getElementById('adminApp').classList.remove('hidden');
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('clientLink').value = window.location.origin + window.location.pathname + '?client';
-    document.getElementById('roleBadge').textContent = CURRENT_ROLE.toUpperCase();
     loadHubs();
-    db.collection('omnihub').doc('hubs').onSnapshot(loadHubs); // REALTIME
+    db.collection('omnihub').doc('hubs').onSnapshot(loadHubs);
   }
 }
-function login(){CURRENT_ROLE=document.getElementById('loginRole').value;init();}
+function login(){CURRENT_ROLE=document.getElementById('loginRole').value;document.getElementById('roleBadge').textContent = CURRENT_ROLE.toUpperCase();init();}
 function logout(){window.location.search='';}
+
+function canDelete(){return CURRENT_ROLE==='owner';}
+function canEdit(){return CURRENT_ROLE==='owner'||CURRENT_ROLE==='manager';}
 
 function renderAdminHubs(){
   document.getElementById('hubTabs').innerHTML = Object.keys(HUBS).map(k=>`<div class="hub-btn ${k===ACTIVE_HUB?'active':''}" onclick="switchAdminHub('${k}')">${HUBS[k].name}</div>`).join('');
@@ -165,29 +172,48 @@ function renderAdminView(){
   <div class="hub-view active">
     <div class="card"><h3>${h.name}</h3><div class="kpi">${Object.entries(h.kpis).map(([k,v])=>`<div class="kpi-box"><small>${k.toUpperCase()}</small><br><b>${v}</b></div>`).join('')}</div></div>
     <div class="card"><h4>📦 INVENTORY [LIVE]</h4>
-      <div class="product-grid">${p.map((x,i)=>`<div class="prod"><button class="delete-x" onclick="deleteProduct(${i})">X</button><img src="${x.img||''}"><div class="prod-body">${x.name}<br>R${x.price}<br><small>Stock:${x.stock}</small><br><span class="badge">${x.specs}</span></div></div>`).join('')}</div>
+      <div class="product-grid">${p.map((x,i)=>`<div class="prod">
+        ${canDelete()?`<button class="delete-x" onclick="deleteProduct(${i})">X</button>`:''}
+        <img src="${x.img||''}"><div class="prod-body">${x.name}<br>R${x.price}<br><small>Stock:${x.stock}</small><br><span class="badge">${x.specs}</span>
+        ${canEdit()?`<div class="stock-controls">
+          <button class="btn-sm btn-orange" onclick="adjStock(${i},-1)">-1</button>
+          <button class="btn-sm btn-blue" onclick="adjStock(${i},1)">+1</button>
+          <button class="btn-sm btn-purple" onclick="setStock(${i})">SET</button>
+        </div>`:''}
+        </div></div>`).join('')}</div>
       <hr style="margin:12px 0">
-      <h4>+ ADD/EDIT PRODUCT [GOD TIER]</h4>
-      <input id="newSku" placeholder="SKU">
-      <input id="newName" placeholder="Name">
-      <input id="newPrice" type="number" placeholder="Price">
+      ${canEdit()?`<h4>+ ADD PRODUCT [GOD TIER]</h4>
+      <input id="newSku" placeholder="SKU*">
+      <input id="newName" placeholder="Name*">
+      <input id="newPrice" type="number" placeholder="Price*">
       <input id="newCost" type="number" placeholder="Cost">
-      <input id="newStock" type="number" placeholder="Stock">
+      <input id="newStock" type="number" placeholder="Stock*" value="0">
       <input id="newSpecs" placeholder="Specs/SABS/VIN/Grade">
       <input id="newImg" type="file" accept="image/*" onchange="uploadImg(event)">
       <img id="imgPreview" style="width:100%;max-height:120px;object-fit:cover;display:none">
-      <button class="btn btn-purple" onclick="addProduct()">SAVE PRODUCT</button>
+      <button class="btn btn-purple" onclick="addProduct()">SAVE PRODUCT</button>`:''}
     </div>
     <div class="card"><h4>🧾 CREATE INVOICE</h4><button class="btn btn-gold" onclick="document.getElementById('invoiceModal').classList.add('active')">OPEN INVOICE SYSTEM</button></div>
   </div>`;
 }
 let UPLOADED_IMG='';
-function uploadImg(e){let f=e.target.files[0];let r=new FileReader();r.onload=ev=>{UPLOADED_IMG=ev.target.result;document.getElementById('imgPreview').src=UPLOADED_IMG;document.getElementById('imgPreview').style.display='block';};r.readAsDataURL(f);}
-async function addProduct(){let sku=document.getElementById('newSku').value.toUpperCase();if(!sku)return notify('SKU required');HUBS[ACTIVE_HUB].products.push({sku,name:document.getElementById('newName').value,price:parseFloat(document.getElementById('newPrice').value),cost:parseFloat(document.getElementById('newCost').value),stock:parseInt(document.getElementById('newStock').value),specs:document.getElementById('newSpecs').value,img:UPLOADED_IMG});await saveHubs();notify('Product Added + Synced');UPLOADED_IMG='';['newSku','newName','newPrice','newCost','newStock','newSpecs'].forEach(id=>document.getElementById(id).value='');document.getElementById('imgPreview').style.display='none';}
-async function deleteProduct(i){if(confirm('DELETE PERMANENTLY FROM CLOUD?')){HUBS[ACTIVE_HUB].products.splice(i,1);await saveHubs();notify('Deleted from Cloud');}}
+function uploadImg(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=ev=>{UPLOADED_IMG=ev.target.result;document.getElementById('imgPreview').src=UPLOADED_IMG;document.getElementById('imgPreview').style.display='block';};r.readAsDataURL(f);}
+async function addProduct(){
+  let sku=document.getElementById('newSku').value.toUpperCase().trim();
+  let name=document.getElementById('newName').value.trim();
+  let price=parseFloat(document.getElementById('newPrice').value);
+  let stock=parseInt(document.getElementById('newStock').value);
+  if(!sku||!name||isNaN(price)||isNaN(stock))return notify('SKU, Name, Price, Stock required');
+  HUBS[ACTIVE_HUB].products.push({sku,name,price,cost:parseFloat(document.getElementById('newCost').value)||0,stock,specs:document.getElementById('newSpecs').value,img:UPLOADED_IMG});
+  await saveHubs();notify('Product Added + Synced');UPLOADED_IMG='';
+  ['newSku','newName','newPrice','newCost','newStock','newSpecs'].forEach(id=>document.getElementById(id).value='');document.getElementById('imgPreview').style.display='none';
+}
+async function deleteProduct(i){if(!canDelete())return;if(confirm('DELETE PERMANENTLY FROM CLOUD?')){HUBS[ACTIVE_HUB].products.splice(i,1);await saveHubs();notify('Deleted from Cloud');}}
+async function adjStock(i,delta){if(!canEdit())return;HUBS[ACTIVE_HUB].products[i].stock=Math.max(0,HUBS[ACTIVE_HUB].products[i].stock+delta);await saveHubs();notify('Stock Updated');}
+async function setStock(i){if(!canEdit())return;let val=prompt('Set stock to:');let num=parseInt(val);if(!isNaN(num)){HUBS[ACTIVE_HUB].products[i].stock=num;await saveHubs();notify('Stock Set');}}
 
 function renderClientHubs(){
-  if(!document.getElementById('clientHubTabs'))return;
+  if(!document.getElementById('clientHubTabs')||!HUBS)return;
   document.getElementById('clientHubTabs').innerHTML = Object.keys(HUBS).map(k=>`<div class="hub-btn ${k===ACTIVE_HUB?'active':''}" onclick="switchClientHub('${k}')">${HUBS[k].name.split('|')[0]}</div>`).join('');
   renderClientView();
 }
@@ -198,24 +224,27 @@ function renderClientView(){
   document.getElementById('clientHubViews').innerHTML = `
   <div class="hub-view active">
     <div class="card"><h3>${h.name.split('|')[0]}</h3><small>${h.name.split('|')[1]||''}</small>
-      <div class="product-grid">${p.map(x=>`<div class="prod" onclick="clientAdd('${x.sku}')"><img src="${x.img||''}"><div class="prod-body">${x.name}<br><b>R${x.price}</b><br><span class="badge">${x.specs}</span></div></div>`).join('')}</div>
+      <div class="product-grid">${p.map(x=>`<div class="prod" onclick="clientAdd('${x.sku}')"><img src="${x.img||''}"><div class="prod-body">${x.name}<br><b>R${x.price}</b><br><span class="badge">${x.specs}</span><br><small>Stock:${x.stock}</small></div></div>`).join('')}</div>
     </div>
   </div>`;
   updateCartFloat();
 }
-function clientAdd(sku){let x=HUBS[ACTIVE_HUB].products.find(i=>i.sku===sku);if(x.alcohol){PENDING_ALCOHOL=x;document.getElementById('ageModal').classList.add('active');return;}let ex=CART.find(i=>i.sku===sku);if(ex){ex.qty++;}else{CART.push({...x,qty:1});}notify(`Added ${x.name}`);updateCartFloat();}
-function ageConfirm(ok){document.getElementById('ageModal').classList.remove('active');if(ok){let x=PENDING_ALCOHOL;let ex=CART.find(i=>i.sku===x.sku);if(ex){ex.qty++;}else{CART.push({...x,qty:1});}notify(`Added ${x.name} 18+`);updateCartFloat();}PENDING_ALCOHOL=null;}
+function clientAdd(sku){let x=HUBS[ACTIVE_HUB].products.find(i=>i.sku===sku);if(x.stock<=0)return notify('OUT OF STOCK');if(x.alcohol){PENDING_ALCOHOL=x;document.getElementById('ageModal').classList.add('active');return;}let ex=CART.find(i=>i.sku===sku);if(ex){ex.qty++;}else{CART.push({...x,qty:1});}notify(`Added ${x.name}`);updateCartFloat();}
+function ageConfirm(ok){closeModal('ageModal');if(ok){let x=PENDING_ALCOHOL;let ex=CART.find(i=>i.sku===x.sku);if(ex){ex.qty++;}else{CART.push({...x,qty:1});}notify(`Added ${x.name} 18+`);updateCartFloat();}PENDING_ALCOHOL=null;}
 function updateCartFloat(){if(document.getElementById('cartCount')){document.getElementById('cartCount').textContent=CART.reduce((a,b)=>a+b.qty,0);document.getElementById('cartTotal').textContent=CART.reduce((a,b)=>a+b.price*b.qty,0).toFixed(2);}}
 function openClientCart(){document.getElementById('clientCartList').innerHTML=CART.map((i,idx)=>`<div class="row"><span>${i.name} x${i.qty}</span><button class="btn-red btn-sm" onclick="CART.splice(${idx},1);openClientCart();updateCartFloat()">x</button></div>`).join('')||'Cart Empty';document.getElementById('clientCartModal').classList.add('active');}
-function openClientInvoice(){let subtotal=CART.reduce((a,b)=>a+b.price*b.qty,0);let vat=subtotal*0.15;let total=subtotal+vat;let msg=`Hi SparesHub, Quote Request:\n${CART.map(i=>`${i.name} x${i.qty} = R${(i.price*i.qty).toFixed(2)}`).join('\n')}\n\nSubtotal: R${subtotal.toFixed(2)}\nVAT 15%: R${vat.toFixed(2)}\nTotal: R${total.toFixed(2)}`;window.open(`https://wa.me/27XXXXXXXXXX?text=${encodeURIComponent(msg)}`,'_blank');}
+function openClientInvoice(){if(CART.length===0)return notify('Cart is empty');let subtotal=CART.reduce((a,b)=>a+b.price*b.qty,0);let vat=subtotal*0.15;let total=subtotal+vat;let msg=`Hi SparesHub, Quote Request:\n${CART.map(i=>`${i.name} x${i.qty} = R${(i.price*i.qty).toFixed(2)}`).join('\n')}\n\nSubtotal: R${subtotal.toFixed(2)}\nVAT 15%: R${vat.toFixed(2)}\nTotal: R${total.toFixed(2)}`;window.open(`https://wa.me/27XXXXXXXXXX?text=${encodeURIComponent(msg)}`,'_blank');}
 
 function saveInvoice(){
+  if(CART.length===0)return notify('Cart is empty');
+  const client=document.getElementById('invClient').value.trim();
+  const phone=document.getElementById('invPhone').value.trim();
+  const addr=document.getElementById('invAddr').value.trim();
+  if(!client||!phone||!addr)return notify('Fill all client fields');
+
   const doc=new jsPDF();
   const comp=document.getElementById('invCompany').value||'SparesHub Pty Ltd';
   const reg=document.getElementById('invReg').value||'VAT: 4123456789';
-  const client=document.getElementById('invClient').value;
-  const phone=document.getElementById('invPhone').value;
-  const addr=document.getElementById('invAddr').value;
   const invNo='INV'+Date.now();
   const subtotal=CART.reduce((a,b)=>a+b.price*b.qty,0);
   const vat=subtotal*0.15; const total=subtotal+vat;
@@ -224,17 +253,18 @@ function saveInvoice(){
   doc.setFontSize(10);doc.text(reg,14,27);doc.text('INVOICE: '+invNo,140,20);doc.text(new Date().toLocaleDateString(),140,27);
   doc.text('BILL TO:',14,40);doc.text(client,14,46);doc.text(phone,14,52);doc.text(addr,14,58);
   let y=75;doc.text('ITEM',14,y);doc.text('QTY',90,y);doc.text('PRICE',120,y);doc.text('TOTAL',160,y);y+=8;
-  CART.forEach(i=>{doc.text(i.name,14,y);doc.text(i.qty.toString(),90,y);doc.text('R'+i.price,120,y);doc.text('R'+(i.price*i.qty).toFixed(2),160,y);y+=7;});
+  CART.forEach(i=>{doc.text(i.name.substring(0,25),14,y);doc.text(i.qty.toString(),90,y);doc.text('R'+i.price,120,y);doc.text('R'+(i.price*i.qty).toFixed(2),160,y);y+=7;});
   y+=5;doc.text('Subtotal: R'+subtotal.toFixed(2),140,y);y+=7;doc.text('VAT 15%: R'+vat.toFixed(2),140,y);y+=7;doc.setFontSize(12);doc.text('TOTAL: R'+total.toFixed(2),140,y);
   y+=15;doc.setFontSize(8);doc.text('Terms: E&OE. Payment 7 Days. Goods remain property until paid.',14,y);
 
-  new QRCode(document.getElementById('qrcanvas'), {text:invNo+'|'+total.toFixed(2),width:64,height:64});
+  document.getElementById('qrcanvas').innerHTML='';
+  new QRCode(document.getElementById('qrcanvas'), {text:invNo+'|R'+total.toFixed(2),width:64,height:64});
   const qr=document.getElementById('qrcanvas').querySelector('img').src;
   doc.addImage(qr,'PNG',140,y+5,30,30);
 
   doc.save(invNo+'.pdf');
   notify('PDF Generated');
-  document.getElementById('invoiceModal').classList.remove('active');
+  closeModal('invoiceModal');
   CART=[];updateCartFloat();
 }
 
