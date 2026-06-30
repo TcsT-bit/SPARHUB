@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#16a34a">
 <link rel="manifest" href="manifest.json">
-<title>SparesHub OMNI-HUB v5.7.7 PWA</title>
+<title>SparesHub OMNI-HUB v5.7.6 PWA</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -36,7 +36,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:999}
 .modal.active{display:flex}
 .modal-card{background:var(--card);padding:20px;border-radius:16px;max-width:700px;width:95%;max-height:90vh;overflow-y:auto}
-.hidden{display:none!important}
+.hidden{display:none!important} /* FORCE HIDE */
 .float-cart{position:fixed;bottom:20px;right:20px;background:var(--green);color:#000;border-radius:50px;padding:16px 24px;font-weight:800;z-index:99;box-shadow:0 4px 20px #000}
 .float-install{position:fixed;bottom:90px;right:20px;background:var(--gold);color:#000;border-radius:50px;padding:14px 20px;font-weight:800;z-index:99;box-shadow:0 4px 20px #000;display:none}
 .share-box{background:#1f2937;padding:12px;border-radius:10px;margin:12px 0}
@@ -58,7 +58,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 
 <div id="adminApp" class="hidden">
   <div class="header">
-    <h1>⚡ OMNI-HUB v5.7.7 <span class="live-dot"></span> <span id="userName"></span></h1>
+    <h1>⚡ OMNI-HUB v5.7.6 <span class="live-dot"></span> <span id="userName"></span></h1>
     <div><span style="font-size:12px;color:var(--gold)" id="roleBadge"></span><button class="btn-red" style="padding:8px 12px;margin-left:8px" onclick="logout()">EXIT</button></div>
   </div>
   <div class="notification" id="notification"></div>
@@ -111,10 +111,10 @@ const WHATSAPP_NUMBER = '27698949596';
 const LOW_STOCK_LIMIT = 10;
 let DEFERRED_PROMPT = null;
 
-// GOD TIER FIX #0: ONLY LOCK TO CLIENT IF?client IS IN URL. DELETED THE STANDALONE BUG
+// GOD TIER FIX #0: LOCK ROLE ON FIRST BYTE. BEFORE ANYTHING RENDERS
 (function lockRole(){
   const isClientUrl = location.search.includes('client');
-  if(isClientUrl){ localStorage.setItem('omniRole','client'); } // ONLY FROM URL
+  if(isClientUrl){ localStorage.setItem('omniRole','client'); } // INSTANT LOCK
 })();
 
 const USERS = {
@@ -172,9 +172,10 @@ async function loadHubs(){
 async function saveHubs(){await db.collection('omnihub').doc('hubs').set(HUBS); checkLowStock();}
 async function saveSales(){await db.collection('omnihub').doc('sales').set({log:SALES_LOG}); renderDashboard();}
 
+// GOD TIER FIX #1: FORCE HIDE ALL OTHER VIEWS FIRST
 function init(){
   const savedRole = localStorage.getItem('omniRole');
-  CURRENT_ROLE = savedRole || 'owner';
+  CURRENT_ROLE = savedRole || 'owner'; // DEFAULT TO OWNER ONLY IF NO MEMORY
 
   document.getElementById('adminApp').classList.add('hidden');
   document.getElementById('clientApp').classList.add('hidden');
@@ -197,6 +198,7 @@ function canEdit(){return CURRENT_ROLE==='owner'||CURRENT_ROLE==='manager';}
 
 function renderDashboard(){let t=new Date().toDateString();let s=SALES_LOG.filter(x=>new Date(x.date).toDateString()===t);let ts=s.reduce((a,b)=>a+b.total,0);let tp=s.reduce((a,b)=>a+b.profit,0);let top=s.length?s.reduce((a,b)=>a.qty>b.qty?a:b):{name:'N/A',qty:0};let lc=Object.values(HUBS).flatMap(h=>h.products).filter(p=>p.stock<LOW_STOCK_LIMIT).length;document.getElementById('dashboard').innerHTML=`<div class="kpi-box"><small>SALES TODAY</small><br><b>R${ts.toFixed(2)}</b></div><div class="kpi-box"><small>PROFIT</small><br><b>R${tp.toFixed(2)}</b></div><div class="kpi-box"><small>TOP ITEM</small><br><b>${top.name}</b></div><div class="kpi-box"><small>LOW STOCK</small><br><b>${lc}</b></div>`;}
 
+// GOD TIER FIX #2: NO WhatsApp AUTO POP. BANNER ONLY
 function checkLowStock(){
   let l=Object.entries(HUBS).flatMap(([k,h])=>h.products.filter(p=>p.stock<LOW_STOCK_LIMIT).map(p=>`${h.name.split('|')[0]}: ${p.name} ${p.stock}`));
   let d=document.getElementById('lowStockAlert'); if(d) d.innerHTML=l.length?`<div class="alert">⚠️ LOW STOCK: ${l.join(', ')}</div>`:'';
