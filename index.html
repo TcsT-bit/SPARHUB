@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#16a34a">
 <link rel="manifest" href="manifest.json">
-<title>SparesHub OMNI-HUB v5.7.5 PWA</title>
+<title>SparesHub OMNI-HUB v5.7.6 PWA</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -36,7 +36,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:999}
 .modal.active{display:flex}
 .modal-card{background:var(--card);padding:20px;border-radius:16px;max-width:700px;width:95%;max-height:90vh;overflow-y:auto}
-.hidden{display:none}
+.hidden{display:none!important} /* FORCE HIDE */
 .float-cart{position:fixed;bottom:20px;right:20px;background:var(--green);color:#000;border-radius:50px;padding:16px 24px;font-weight:800;z-index:99;box-shadow:0 4px 20px #000}
 .float-install{position:fixed;bottom:90px;right:20px;background:var(--gold);color:#000;border-radius:50px;padding:14px 20px;font-weight:800;z-index:99;box-shadow:0 4px 20px #000;display:none}
 .share-box{background:#1f2937;padding:12px;border-radius:10px;margin:12px 0}
@@ -58,7 +58,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 
 <div id="adminApp" class="hidden">
   <div class="header">
-    <h1>⚡ OMNI-HUB v5.7.5 <span class="live-dot"></span> <span id="userName"></span></h1>
+    <h1>⚡ OMNI-HUB v5.7.6 <span class="live-dot"></span> <span id="userName"></span></h1>
     <div><span style="font-size:12px;color:var(--gold)" id="roleBadge"></span><button class="btn-red" style="padding:8px 12px;margin-left:8px" onclick="logout()">EXIT</button></div>
   </div>
   <div class="notification" id="notification"></div>
@@ -87,7 +87,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 
 <div id="clientApp" class="hidden">
   <div class="client-header"><h1>⚡ SparesHub STORE <span class="live-dot"></span></h1></div>
-  <div class="float-install" id="installBtn" onclick="installApp()">📲 INSTALL STORE APP</div> <!-- CLIENT APP -->
+  <div class="float-install" id="installBtn" onclick="installApp()">📲 INSTALL STORE APP</div>
   <div id="clientLowStockAlert"></div>
   <div class="hub-tabs" id="clientHubTabs"></div>
   <div id="clientHubViews"></div>
@@ -98,7 +98,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 <div id="loginScreen">
   <div class="modal-card" style="margin:10vh auto">
     <h2>⚡ OMNI-HUB ADMIN PIN</h2>
-    <div style="margin-bottom:12px"><button class="btn btn-blue" onclick="enterClientMode()">ENTER STORE MODE</button></div> <!-- CLIENT APP BUTTON -->
+    <div style="margin-bottom:12px"><button class="btn btn-blue" onclick="enterClientMode()">ENTER STORE MODE</button></div>
     <input id="pinDisplay" readonly placeholder="Enter 4-Digit PIN" style="font-size:24px;text-align:center">
     <div class="pin-grid" id="pinGrid"></div>
     <button class="btn btn-red" onclick="clearPin()">CLEAR</button>
@@ -110,6 +110,16 @@ const { jsPDF } = window.jspdf;
 const WHATSAPP_NUMBER = '27698949596';
 const LOW_STOCK_LIMIT = 10;
 let DEFERRED_PROMPT = null;
+
+// GOD TIER FIX #0: LOCK ROLE ON FIRST BYTE. BEFORE ANYTHING RENDERS
+// GOD TIER FIX #0: BULLETPROOF ROLE LOCK 
+(function lockRole(){
+  const isClientUrl = location.search.includes('client');
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+  
+  if(isClientUrl){ localStorage.setItem('omniRole','client'); } // FROM URL
+  else if(isStandalone && !localStorage.getItem('omniRole')){ localStorage.setItem('omniRole','client'); } // FROM INSTALLED APP
+})();
 
 const USERS = {
   '1234':{name:'CEO',role:'owner'},
@@ -141,7 +151,7 @@ function closeModal(id){document.getElementById(id).classList.remove('active'); 
 function copyLink(){navigator.clipboard.writeText(document.getElementById('clientLink').value);notify('Link Copied');}
 
 window.addEventListener('beforeinstallprompt', (e) => {e.preventDefault(); DEFERRED_PROMPT = e; if(CURRENT_ROLE==='client') document.getElementById('installBtn').style.display='block';});
-function installApp(){if(DEFERRED_PROMPT){DEFERRED_PROMPT.prompt(); DEFERRED_PROMPT.userChoice.then(()=>{document.getElementById('installBtn').style.display='none';});}}
+function installApp(){if(DEFERRED_PROMPT){DEFERRED_PROMPT.prompt(); DEFERRED_PROMPT.userChoice.then(()=>{document.getElementById('installBtn').style.display='none'; localStorage.setItem('omniRole','client');});}} // LOCK ON INSTALL
 
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
 
@@ -150,7 +160,6 @@ function pressPin(k){let d=document.getElementById('pinDisplay');if(k==='OK'){lo
 function clearPin(){document.getElementById('pinDisplay').value='';}
 function loginPin(pin){if(USERS[pin]){CURRENT_USER=USERS[pin];CURRENT_ROLE=CURRENT_USER.role;localStorage.setItem('omniRole',CURRENT_ROLE);document.getElementById('userName').textContent=CURRENT_USER.name;document.getElementById('roleBadge').textContent=CURRENT_ROLE.toUpperCase();init();}else{notify('Invalid PIN');clearPin();}}
 
-// GOD TIER FIX #1: CLIENT MODE BUTTON = NO?client NEEDED
 function enterClientMode(){localStorage.setItem('omniRole','client'); CURRENT_USER=USERS.client; CURRENT_ROLE='client'; init();}
 
 async function loadHubs(){
@@ -167,20 +176,22 @@ async function loadHubs(){
 async function saveHubs(){await db.collection('omnihub').doc('hubs').set(HUBS); checkLowStock();}
 async function saveSales(){await db.collection('omnihub').doc('sales').set({log:SALES_LOG}); renderDashboard();}
 
-// GOD TIER FIX #2: localStorage = REMEMBERS CLIENT EVEN AFTER REFRESH/INSTALL
+// GOD TIER FIX #1: FORCE HIDE ALL OTHER VIEWS FIRST
 function init(){
   const savedRole = localStorage.getItem('omniRole');
-  const isClientUrl = location.search.includes('client');
+  CURRENT_ROLE = savedRole || 'owner'; // DEFAULT TO OWNER ONLY IF NO MEMORY
 
-  if(savedRole==='client' || isClientUrl){
-    localStorage.setItem('omniRole','client'); // LOCK IT IN
-    CURRENT_USER=USERS.client; CURRENT_ROLE='client';
+  document.getElementById('adminApp').classList.add('hidden');
+  document.getElementById('clientApp').classList.add('hidden');
+  document.getElementById('loginScreen').classList.add('hidden');
+
+  if(CURRENT_ROLE==='client'){
+    CURRENT_USER=USERS.client;
     document.getElementById('clientApp').classList.remove('hidden');
-    document.getElementById('loginScreen').classList.add('hidden');
     loadHubs(); db.collection('omnihub').doc('hubs').onSnapshot(loadHubs);
   }else{
     document.getElementById('adminApp').classList.remove('hidden');
-    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
     document.getElementById('clientLink').value = location.origin + location.pathname + '?client';
     loadHubs(); db.collection('omnihub').doc('hubs').onSnapshot(loadHubs); db.collection('omnihub').doc('sales').onSnapshot(loadHubs);
   }
@@ -191,7 +202,7 @@ function canEdit(){return CURRENT_ROLE==='owner'||CURRENT_ROLE==='manager';}
 
 function renderDashboard(){let t=new Date().toDateString();let s=SALES_LOG.filter(x=>new Date(x.date).toDateString()===t);let ts=s.reduce((a,b)=>a+b.total,0);let tp=s.reduce((a,b)=>a+b.profit,0);let top=s.length?s.reduce((a,b)=>a.qty>b.qty?a:b):{name:'N/A',qty:0};let lc=Object.values(HUBS).flatMap(h=>h.products).filter(p=>p.stock<LOW_STOCK_LIMIT).length;document.getElementById('dashboard').innerHTML=`<div class="kpi-box"><small>SALES TODAY</small><br><b>R${ts.toFixed(2)}</b></div><div class="kpi-box"><small>PROFIT</small><br><b>R${tp.toFixed(2)}</b></div><div class="kpi-box"><small>TOP ITEM</small><br><b>${top.name}</b></div><div class="kpi-box"><small>LOW STOCK</small><br><b>${lc}</b></div>`;}
 
-// GOD TIER FIX #3: NO MORE window.open(wa.me) EVER. ONLY BANNER
+// GOD TIER FIX #2: NO WhatsApp AUTO POP. BANNER ONLY
 function checkLowStock(){
   let l=Object.entries(HUBS).flatMap(([k,h])=>h.products.filter(p=>p.stock<LOW_STOCK_LIMIT).map(p=>`${h.name.split('|')[0]}: ${p.name} ${p.stock}`));
   let d=document.getElementById('lowStockAlert'); if(d) d.innerHTML=l.length?`<div class="alert">⚠️ LOW STOCK: ${l.join(', ')}</div>`:'';
@@ -223,8 +234,7 @@ function renderClientView(){let h=HUBS[ACTIVE_HUB],p=h.products;document.getElem
 function clientAdd(s){let x=HUBS[ACTIVE_HUB].products.find(i=>i.sku===s);if(x.stock<=0)return notify('OUT OF STOCK');if(x.alcohol){PENDING_ALCOHOL=x;document.getElementById('ageModal').classList.add('active');return;}let e=CART.find(i=>i.sku===s);e?e.qty++:CART.push({...x,qty:1});notify(`Added ${x.name}`);updateCartFloat();}
 function ageConfirm(o){closeModal('ageModal');if(o){let x=PENDING_ALCOHOL;let e=CART.find(i=>i.sku===x.sku);e?e.qty++:CART.push({...x,qty:1});notify(`Added ${x.name} 18+`);updateCartFloat();}PENDING_ALCOHOL=null;}
 function updateCartFloat(){document.getElementById('cartCount').textContent=CART.reduce((a,b)=>a+b.qty,0);document.getElementById('cartTotal').textContent=CART.reduce((a,b)=>a+b.price*b.qty,0).toFixed(2);}
-function openClientCart(){document.getElementById('clientCartList').innerHTML=CART.map((i,idx)=>`<div class="row"><span>${i.name} x${i.qty}</span><button class="btn-red btn-sm" onclick="CART.splice(${idx},1);openClientCart();updateCartFloat()">x</button></div>`).join('')||'Cart Empty';document.getElementById('clientCartModal').classList.add('active');}
-function openClientInvoice(){if(CART.length===0)return notify('Cart empty');let s=CART.reduce((a,b)=>a+b.price*b.qty,0);let v=s*0.15;let t=s+v;let m=`Hi SparesHub Quote:\n${CART.map(i=>`${i.name} x${i.qty} = R${(i.price*i.qty).toFixed(2)}`).join('\n')}\n\nSubtotal: R${s.toFixed(2)}\nVAT 15%: R${v.toFixed(2)}\nTotal: R${t.toFixed(2)}`;window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(m)}`,'_blank');}
+function openClientCart(){document.getElementById('clientCartList').innerHTML=CART.map((i,idx)=>`<div class="row"><span>${i.name} x${i.qty}</span><button class="btn-red btn-sm" onclick="CART.splice(${idx},1);openClientCart();updateCartFloat()">x</button></div>`).join('')||'Cart Empty';document.getElementById('clientCartModal').classList.add('active');}function openClientInvoice(){if(CART.length===0)return notify('Cart empty');let s=CART.reduce((a,b)=>a+b.price*b.qty,0);let v=s*0.15;let t=s+v;let m=`Hi SparesHub Quote:\n${CART.map(i=>`${i.name} x${i.qty} = R${(i.price*i.qty).toFixed(2)}`).join('\n')}\n\nSubtotal: R${s.toFixed(2)}\nVAT 15%: R${v.toFixed(2)}\nTotal: R${t.toFixed(2)}`;window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(m)}`,'_blank');}
 
 async function saveInvoice(){let c=CURRENT_ROLE==='client'?CART:ADMIN_CART;if(c.length===0)return notify('Cart empty');const cl=document.getElementById('invClient').value.trim();const ph=document.getElementById('invPhone').value.trim();const ad=document.getElementById('invAddr').value.trim();if(!cl||!ph||!ad)return notify('Fill all');const d=new jsPDF();const no='INV'+Date.now();const sub=c.reduce((a,b)=>a+b.price*b.qty,0);const vat=sub*0.15;const tot=sub+vat;const pr=c.reduce((a,b)=>(b.price-b.cost)*b.qty,0);d.text(document.getElementById('invCompany').value,14,20);d.text(document.getElementById('invReg').value,14,27);d.text('INVOICE: '+no,140,20);d.text(new Date().toLocaleDateString(),140,27);d.text('BILL TO:',14,40);d.text(cl,14,46);d.text(ph,14,52);d.text(ad,14,58);let y=75;d.text('ITEM',14,y);d.text('QTY',90,y);d.text('PRICE',120,y);d.text('TOTAL',160,y);y+=8;c.forEach(i=>{d.text(i.name.substring(0,25),14,y);d.text(i.qty.toString(),90,y);d.text('R'+i.price,120,y);d.text('R'+(i.price*i.qty).toFixed(2),160,y);y+=7;});y+=5;d.text('Subtotal: R'+sub.toFixed(2),140,y);y+=7;d.text('VAT 15%: R'+vat.toFixed(2),140,y);y+=7;d.setFontSize(12);d.text('TOTAL: R'+tot.toFixed(2),140,y);document.getElementById('qrcanvas').innerHTML='';new QRCode(document.getElementById('qrcanvas'),{text:no+'|R'+tot.toFixed(2),width:64,height:64});d.addImage(document.getElementById('qrcanvas').querySelector('img').src,'PNG',140,y+5,30,30);d.save(no+'.pdf');SALES_LOG.push({date:new Date().toISOString(),inv:no,total:tot,profit:pr,user:CURRENT_USER.name,items:c.map(i=>({name:i.name,qty:i.qty})),topItem:c.reduce((a,b)=>a.qty>b.qty?a:b).name});await saveSales();c.forEach(it=>{let p=Object.values(HUBS).flatMap(h=>h.products).find(x=>x.sku===it.sku);if(p)p.stock=Math.max(0,p.stock-it.qty);});await saveHubs();c.length=0;updateCartFloat();updateAdminCartFloat();closeModal('invoiceModal');notify('PDF Generated');}
 
