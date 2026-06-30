@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#16a34a">
 <link rel="manifest" href="manifest.json">
-<title>SparesHub OMNI-HUB v5.7.0</title>
+<title>SparesHub OMNI-HUB v5.7.1</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -61,7 +61,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 
 <div id="adminApp" class="hidden">
   <div class="header">
-    <h1>⚡ OMNI-HUB v5.7.0 <span class="live-dot"></span> <span id="userName"></span></h1>
+    <h1>⚡ OMNI-HUB v5.7.1 <span class="live-dot"></span> <span id="userName"></span></h1>
     <div><span style="font-size:12px;color:var(--gold)" id="roleBadge"></span><button class="btn-red" style="padding:8px 12px;margin-left:8px" onclick="logout()">EXIT</button></div>
   </div>
   <div class="notification" id="notification"></div>
@@ -108,7 +108,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 
 <script>
 const { jsPDF } = window.jspdf;
-const IS_CLIENT = location.hash==='#client' || location.search.includes('client');
+const IS_CLIENT = location.search.includes('client');
 const WHATSAPP_NUMBER = '27698949596';
 const LOW_STOCK_LIMIT = 10;
 let DEFERRED_PROMPT = null;
@@ -117,7 +117,7 @@ const USERS = {
   '1234':{name:'CEO',role:'owner'},
   '5678':{name:'Manager',role:'manager'},
   '0000':{name:'Cashier',role:'cashier'},
-  'client':{name:'Guest',role:'client'} // GOD TIER: Auto client role
+  'client':{name:'Guest',role:'client'} // GOD TIER: Auto client
 };
 
 const firebaseConfig = {
@@ -153,7 +153,7 @@ function copyLink(){navigator.clipboard.writeText(document.getElementById('clien
 window.addEventListener('beforeinstallprompt', (e) => {e.preventDefault(); DEFERRED_PROMPT = e; if(IS_CLIENT) document.getElementById('installBtn').style.display='block';});
 function installApp(){if(DEFERRED_PROMPT){DEFERRED_PROMPT.prompt(); DEFERRED_PROMPT.userChoice.then(()=>{document.getElementById('installBtn').style.display='none';});}}
 
-// PWA SW REGISTER
+// PWA SW REGISTER = LEGIT
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
 
 function renderPin(){let g=document.getElementById('pinGrid');g.innerHTML=[1,2,3,4,5,6,7,8,9,0,'<','OK'].map(k=>`<button class="pin-btn" onclick="pressPin('${k}')">${k}</button>`).join('');}
@@ -175,8 +175,8 @@ async function saveHubs(){try{await db.collection('omnihub').doc('hubs').set(HUB
 async function saveSales(){await db.collection('omnihub').doc('sales').set({log:SALES_LOG}); renderDashboard();}
 
 function init(){
-  // GOD TIER: Hide?client or #client from URL bar after load
-  if(location.hash==='#client' || location.search.includes('client')){
+  // GOD TIER: Hide?client from URL bar after load
+  if(location.search.includes('client')){
     history.replaceState(null,'',location.pathname);
   }
 
@@ -189,17 +189,16 @@ function init(){
   }else{
     document.getElementById('adminApp').classList.remove('hidden');
     document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('clientLink').value = location.origin + location.pathname + '#client'; // CLEAN LINK
+    document.getElementById('clientLink').value = location.origin + location.pathname + '?client'; // COPY THIS ONCE
     loadHubs();
     db.collection('omnihub').doc('hubs').onSnapshot(loadHubs);
     db.collection('omnihub').doc('sales').onSnapshot(loadHubs);
   }
 }
-function logout(){location.hash=''; location.reload();}
+function logout(){location.search=''; location.reload();}
 
 function canDelete(){return CURRENT_ROLE==='owner';}
 function canEdit(){return CURRENT_ROLE==='owner'||CURRENT_ROLE==='manager';}
-function canViewStock(){return CURRENT_ROLE!=='client';} // Client can't edit stock
 
 function renderDashboard(){
   let today = new Date().toDateString();
