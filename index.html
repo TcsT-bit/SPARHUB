@@ -280,7 +280,7 @@ async function pasteLink(){
       previewUrl(text);
       notify('Link Pasted ✅');
     }else{
-      notify('No Catbox link in clipboard');
+      notify('No Catbox link in clipboard');} 
     }
   }catch(e){notify('Clipboard denied. Tap + Hold > Paste.');}
 function previewUrl(url){if(url.startsWith('http')){document.getElementById('imgPreview').src=url;document.getElementById('imgPreview').style.display='block';}else{document.getElementById('imgPreview').style.display='none';}}
