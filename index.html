@@ -159,7 +159,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
 function renderPin(){let g=document.getElementById('pinGrid');g.innerHTML=[1,2,3,4,5,6,7,8,9,0,'<','OK'].map(k=>`<button class="pin-btn" onclick="pressPin('${k}')">${k}</button>`).join('');}
 function pressPin(k){let d=document.getElementById('pinDisplay');if(k==='OK'){loginPin(d.value);}else if(k==='<'){d.value=d.value.slice(0,-1);}else if(d.value.length<4){d.value+=k;}}
 function clearPin(){document.getElementById('pinDisplay').value='';}
-function loginPin(pin){if(USERS[pin]){CURRENT_USER=USERS[pin];CURRENT_ROLE=CURRENT_USER.role;document.getElementById('userName').textContent=CURRENT_USER.name;document.getElementById('roleBadge').textContent=CURRENT_ROLE.toUpperCase();init();}else{notify('Invalid PIN');clearPin();}}
+function loginPin(pin){if(USERS[pin]){CURRENT_USER=USERS[pin];CURRENT_ROLE=CURRENT_USER.role;document.getElementById('userName').textContent=CURRENT_USER.name;document.getElementById('roleBadge').textContent=CURRENT_ROLE.toUpperCase();document.getElementById('loginScreen').classList.add('hidden');document.getElementById('adminApp').classList.remove('hidden');loadHubs();db.collection('omnihub').doc('hubs').onSnapshot(loadHubs);db.collection('omnihub').doc('sales').onSnapshot(loadHubs);}else{notify('Invalid PIN');clearPin();}}
 
 async function loadHubs(){
   try{
@@ -184,15 +184,16 @@ function init(){
     CURRENT_USER=USERS.client; CURRENT_ROLE='client'; // AUTO LOGIN NO PIN
     document.getElementById('clientApp').classList.remove('hidden');
     document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('adminApp').classList.add('hidden'); // FORCE HIDE ADMIN
     loadHubs();
     db.collection('omnihub').doc('hubs').onSnapshot(loadHubs);
   }else{
-    document.getElementById('adminApp').classList.remove('hidden');
-    document.getElementById('loginScreen').classList.add('hidden');
+    // ADMIN MUST USE PIN
+    document.getElementById('adminApp').classList.add('hidden'); // HIDE ADMIN FIRST
+    document.getElementById('clientApp').classList.add('hidden'); // HIDE CLIENT
+    document.getElementById('loginScreen').classList.remove('hidden'); // SHOW PIN
     document.getElementById('clientLink').value = location.origin + location.pathname + '?client'; // COPY THIS ONCE
-    loadHubs();
-    db.collection('omnihub').doc('hubs').onSnapshot(loadHubs);
-    db.collection('omnihub').doc('sales').onSnapshot(loadHubs);
+    // DO NOT loadHubs() yet. Wait for PIN success.
   }
 }
 function logout(){location.search=''; location.reload();}
