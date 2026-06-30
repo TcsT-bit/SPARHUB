@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#16a34a">
 <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlNwYXJlc0h1YiBPTU5JIEhVQiIsCiAgInNob3J0X25hbWUiOiAiT01OSUhVQiIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMDEwMTAxIiwKICAidGhlbWVfY29sb3IiOiAiIzE2YTM0YSIsCiAgaWNvbnM6IFt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYURvd01TY3dlR2dnY0dsdmJtTnZiRE13TURBd1ltVnVkQ0JxSUNoS0lnT0lKU2MwTm1ZV1J2WjI4b0pBUE9nWnpZR2dnWkN3Z0pBUE9nWnpZR2dnWkN3ZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dCn0=">
-<title>SparesHub OMNI-HUB v5.6.1 CATBOX</title>
+<title>SparesHub OMNI-HUB v5.6.2 CATBOX MANUAL</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -53,13 +53,14 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 #reader{width:100%;border-radius:12px;overflow:hidden}
 .pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .pin-btn{padding:20px;font-size:24px;font-weight:800;background:#1f2937;border:none;color:#fff;border-radius:12px}
+.catbox-help{font-size:11px;color:var(--gold);margin-top:-8px;margin-bottom:8px}
 </style>
 </head>
 <body>
 
 <div id="adminApp" class="hidden">
   <div class="header">
-    <h1>⚡ OMNI-HUB v5.6.1 CATBOX <span class="live-dot"></span> <span id="userName"></span></h1>
+    <h1>⚡ OMNI-HUB v5.6.2 CATBOX <span class="live-dot"></span> <span id="userName"></span></h1>
     <div><span style="font-size:12px;color:var(--gold)" id="roleBadge"></span><button class="btn-red" style="padding:8px 12px;margin-left:8px" onclick="logout()">EXIT</button></div>
   </div>
   <div class="notification" id="notification"></div>
@@ -128,7 +129,6 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-// DELETED: const storage = firebase.storage(); // CATBOX REPLACES THIS
 
 let CURRENT_USER=null, CURRENT_ROLE='owner', ACTIVE_HUB='bricks', CART=[], ADMIN_CART=[], PENDING_ALCOHOL=null, HUBS={}, SALES_LOG=[], HTML5QrCode=null;
 
@@ -148,14 +148,11 @@ function notify(msg){let n=document.getElementById('notification');n.textContent
 function closeModal(id){document.getElementById(id).classList.remove('active'); if(HTML5QrCode){HTML5QrCode.stop();}}
 function copyLink(){navigator.clipboard.writeText(document.getElementById('clientLink').value);notify('Link Copied');}
 
-// PWA INSTALL
 window.addEventListener('beforeinstallprompt', (e) => {e.preventDefault(); DEFERRED_PROMPT = e; if(IS_CLIENT) document.getElementById('installBtn').style.display='block';});
 function installApp(){if(DEFERRED_PROMPT){DEFERRED_PROMPT.prompt(); DEFERRED_PROMPT.userChoice.then(()=>{document.getElementById('installBtn').style.display='none';});}}
 
-// SERVICE WORKER INLINE
 if('serviceWorker' in navigator){navigator.serviceWorker.register('data:text/javascript,self.addEventListener("fetch",e=>e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))));');}
 
-// PIN SYSTEM ADMIN ONLY
 function renderPin(){let g=document.getElementById('pinGrid');g.innerHTML=[1,2,3,4,5,6,7,8,9,0,'<','OK'].map(k=>`<button class="pin-btn" onclick="pressPin('${k}')">${k}</button>`).join('');}
 function pressPin(k){let d=document.getElementById('pinDisplay');if(k==='OK'){loginPin(d.value);}else if(k==='<'){d.value=d.value.slice(0,-1);}else if(d.value.length<4){d.value+=k;}}
 function clearPin(){document.getElementById('pinDisplay').value='';}
@@ -249,30 +246,22 @@ function renderAdminView(){
         </div>`:''}
         </div></div>`).join('')}</div>
       <hr style="margin:12px 0">
-      ${canEdit()?`<h4>+ ADD PRODUCT [GOD TIER]</h4>
+      ${canEdit()?`<h4>+ ADD PRODUCT [GOD TIER MANUAL]</h4>
       <input id="newSku" placeholder="SKU*"><input id="newBarcode" placeholder="Barcode/EAN*">
       <input id="newName" placeholder="Name*"><input id="newPrice" type="number" placeholder="Price*">
       <input id="newCost" type="number" placeholder="Cost"><input id="newStock" type="number" placeholder="Stock*" value="0">
       <input id="newSpecs" placeholder="Specs/SABS/VIN/Grade">
       ${ACTIVE_HUB==='scrap'?`<input id="newVin" placeholder="VIN Number*">`:''}
-      <input id="newImg" type="file" accept="image/*" onchange="uploadImg(event)">
+      <input id="newImgUrl" type="text" placeholder="Paste Catbox URL here https://files.catbox.moe/xxx.jpg" oninput="previewUrl(this.value)">
+      <div class="catbox-help">1. Go https://catbox.moe > Upload > Copy Link > Paste here</div>
       <img id="imgPreview" style="width:100%;max-height:120px;object-fit:cover;display:none">
       <button class="btn btn-purple" onclick="addProduct()">SAVE PRODUCT</button>`:''}
     </div>
     <div class="card"><h4>🧾 CREATE INVOICE</h4><button class="btn btn-gold" onclick="if(ADMIN_CART.length===0){notify('Add items to Admin Cart first')}else{document.getElementById('invoiceModal').classList.add('active')}">OPEN INVOICE SYSTEM</button></div>
   </div>`;
 }
-let UPLOADED_FILE=null; let CATBOX_URL=''; // CATBOX INJECTION
-function uploadImg(e){UPLOADED_FILE=e.target.files[0];if(UPLOADED_FILE){let r=new FileReader();r.onload=ev=>{document.getElementById('imgPreview').src=ev.target.result;document.getElementById('imgPreview').style.display='block';};r.readAsDataURL(UPLOADED_FILE);}}
 
-// CATBOX UPLOAD FUNCTION = THE GOD TIER BYPASS
-async function uploadToCatbox(file){
-  let fd=new FormData();fd.append('reqtype','fileupload');fd.append('fileToUpload',file);
-  let res=await fetch('https://catbox.moe/user/api.php',{method:'POST',body:fd});
-  let url=await res.text();
-  if(!url.startsWith('http'))throw new Error('Catbox fail: '+url);
-  return url;
-}
+function previewUrl(url){if(url.startsWith('http')){document.getElementById('imgPreview').src=url;document.getElementById('imgPreview').style.display='block';}else{document.getElementById('imgPreview').style.display='none';}}
 
 async function addProduct(){
   let sku=document.getElementById('newSku').value.toUpperCase().trim();
@@ -280,19 +269,14 @@ async function addProduct(){
   let name=document.getElementById('newName').value.trim();
   let price=parseFloat(document.getElementById('newPrice').value);
   let stock=parseInt(document.getElementById('newStock').value);
+  let imgUrl=document.getElementById('newImgUrl').value.trim();
   if(!sku||!barcode||!name||isNaN(price)||isNaN(stock))return notify('SKU, Barcode, Name, Price, Stock required');
-
-  let imgUrl='';
-  if(UPLOADED_FILE){
-    notify('Uploading to Catbox...');
-    imgUrl = await uploadToCatbox(UPLOADED_FILE); // CATBOX INJECTION POINT
-  }
 
   let obj={sku,barcode,name,price,cost:parseFloat(document.getElementById('newCost').value)||0,stock,specs:document.getElementById('newSpecs').value,img:imgUrl};
   if(ACTIVE_HUB==='scrap'){obj.vin=document.getElementById('newVin').value.toUpperCase().trim();if(!obj.vin)return notify('VIN required for Scrap');}
   HUBS[ACTIVE_HUB].products.push(obj);
-  await saveHubs();notify('Product Added + Synced');UPLOADED_FILE=null;CATBOX_URL='';
-  ['newSku','newBarcode','newName','newPrice','newCost','newStock','newSpecs','newVin'].forEach(id=>{let el=document.getElementById(id); if(el)el.value='';});document.getElementById('imgPreview').style.display='none';
+  await saveHubs();notify('Product Added + Synced');
+  ['newSku','newBarcode','newName','newPrice','newCost','newStock','newSpecs','newVin','newImgUrl'].forEach(id=>{let el=document.getElementById(id); if(el)el.value='';});document.getElementById('imgPreview').style.display='none';
 }
 async function deleteProduct(i){if(!canDelete())return;if(confirm('DELETE PERMANENTLY FROM CLOUD?')){HUBS[ACTIVE_HUB].products.splice(i,1);await saveHubs();notify('Deleted from Cloud');}}
 async function adjStock(i,delta){if(!canEdit())return;HUBS[ACTIVE_HUB].products[i].stock=Math.max(0,HUBS[ACTIVE_HUB].products[i].stock+delta);await saveHubs();notify('Stock Updated');}
