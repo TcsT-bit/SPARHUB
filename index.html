@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#16a34a">
-<link rel="manifest" href="manifest.json"> <!-- PWA LINK -->
-<title>SparesHub OMNI-HUB v5.7.3 PWA</title>
+<link rel="manifest" href="manifest.json">
+<title>SparesHub OMNI-HUB v5.7.4 PWA</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -40,7 +40,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 .modal-card{background:var(--card);padding:20px;border-radius:16px;max-width:700px;width:95%;max-height:90vh;overflow-y:auto}
 .hidden{display:none}
 .float-cart{position:fixed;bottom:20px;right:20px;background:var(--green);color:#000;border-radius:50px;padding:16px 24px;font-weight:800;z-index:99;box-shadow:0 4px 20px #000}
-.float-install{position:fixed;bottom:90px;right:20px;background:var(--gold);color:#000;border-radius:50px;padding:14px 20px;font-weight:800;z-index:99;box-shadow:0 4px 20px #000;display:none} <!-- PWA BUTTON -->
+.float-install{position:fixed;bottom:90px;right:20px;background:var(--gold);color:#000;border-radius:50px;padding:14px 20px;font-weight:800;z-index:99;box-shadow:0 4px 20px #000;display:none}
 .share-box{background:#1f2937;padding:12px;border-radius:10px;margin:12px 0}
 .badge{background:var(--purple);padding:2px 6px;border-radius:6px;font-size:10px}
 .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
@@ -60,7 +60,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 
 <div id="adminApp" class="hidden">
   <div class="header">
-    <h1>⚡ OMNI-HUB v5.7.3 <span class="live-dot"></span> <span id="userName"></span></h1>
+    <h1>⚡ OMNI-HUB v5.7.4 <span class="live-dot"></span> <span id="userName"></span></h1>
     <div><span style="font-size:12px;color:var(--gold)" id="roleBadge"></span><button class="btn-red" style="padding:8px 12px;margin-left:8px" onclick="logout()">EXIT</button></div>
   </div>
   <div class="notification" id="notification"></div>
@@ -89,7 +89,8 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 
 <div id="clientApp" class="hidden">
   <div class="client-header"><h1>⚡ SparesHub STORE <span class="live-dot"></span></h1></div>
-  <div class="float-install" id="installBtn" onclick="installApp()">📲 INSTALL APP</div> <!-- PWA BUTTON SHOWS HERE -->
+  <div class="float-install" id="installBtn" onclick="installApp()">📲 INSTALL APP</div>
+  <div id="clientLowStockAlert"></div> <!-- CLIENT LOW STOCK BANNER -->
   <div class="hub-tabs" id="clientHubTabs"></div>
   <div id="clientHubViews"></div>
   <div class="float-cart" onclick="openClientCart()">🛒 <span id="cartCount">0</span> | R<span id="cartTotal">0.00</span></div>
@@ -110,7 +111,7 @@ const { jsPDF } = window.jspdf;
 const IS_CLIENT = location.search.includes('client');
 const WHATSAPP_NUMBER = '27698949596';
 const LOW_STOCK_LIMIT = 10;
-let DEFERRED_PROMPT = null; // PWA INSTALL
+let DEFERRED_PROMPT = null;
 
 const USERS = {
   '1234':{name:'CEO',role:'owner'},
@@ -133,22 +134,17 @@ let CURRENT_USER=null, CURRENT_ROLE='owner', ACTIVE_HUB='bricks', CART=[], ADMIN
 
 const DEFAULT_HUBS = {
   bricks:{name:'🧱 Bricks | Builders OS', kpis:{moq:'1000',delivery:'48H',credit:'30'}, products:[{sku:'B6',barcode:'6001234567890',name:'6" Brick NFX',price:3.20,stock:500,cost:2.10,img:'https://images.unsplash.com/photo-1591088398332-8a7791972843?w=300',specs:'14Mpa, SABS 227'}]},
-  tavern:{name:'🍺 Tavern | Makro Liquor OS', kpis:{license:'RICA',cold:'-4C',pos:'Scan'}, products:[{sku:'BEER',barcode:'6001234567891',name:'Castle Lager 500ml',price:22,stock:100,cost:15,alcohol:true,img:'https://images.unsplash.com/photo-1608270586620-57bd79aacb6d?w=300',specs:'18+ ID Scan Required'}]}
+  tavern:{name:'🍺 Tavern | Makro Liquor OS', kpis:{license:'RICA',cold:'-4C',pos:'Scan'}, products:[{sku:'BEER',barcode:'6001234567891',name:'Castle Lager 500ml',price:22,stock:100,cost:15,alcohol:true,img:'https://images.unsplash.com/photo-1608270586620-57bd79aacb6d?w=300',specs:'18+ ID Scan Required'}]},
+  restaurant:{name:'🍔 Restaurant | Nandos OS', kpis:{pos:'Kitchen',prep:'8min',loyal:'App'}, products:[{sku:'BURGER',barcode:'6001234567898',name:'Chicken Burger',price:55,stock:0,cost:30,img:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300',specs:'Halal'}]}
 };
 
 function notify(msg){let n=document.getElementById('notification');n.textContent=msg;n.style.display='block';setTimeout(()=>n.style.display='none',2500);}
 function closeModal(id){document.getElementById(id).classList.remove('active'); if(HTML5QrCode){HTML5QrCode.stop();}}
 function copyLink(){navigator.clipboard.writeText(document.getElementById('clientLink').value);notify('Link Copied');}
 
-// PWA INSTALL LOGIC = LEGIT
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  DEFERRED_PROMPT = e;
-  if(IS_CLIENT) document.getElementById('installBtn').style.display='block'; // SHOW BUTTON FOR CLIENT
-});
+window.addEventListener('beforeinstallprompt', (e) => {e.preventDefault(); DEFERRED_PROMPT = e; if(IS_CLIENT) document.getElementById('installBtn').style.display='block';});
 function installApp(){if(DEFERRED_PROMPT){DEFERRED_PROMPT.prompt(); DEFERRED_PROMPT.userChoice.then(()=>{document.getElementById('installBtn').style.display='none';});}}
 
-// PWA SW REGISTER = NON-NEGOTIABLE
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
 
 function renderPin(){let g=document.getElementById('pinGrid');g.innerHTML=[1,2,3,4,5,6,7,8,9,0,'<','OK'].map(k=>`<button class="pin-btn" onclick="pressPin('${k}')">${k}</button>`).join('');}
@@ -171,7 +167,7 @@ async function saveHubs(){await db.collection('omnihub').doc('hubs').set(HUBS); 
 async function saveSales(){await db.collection('omnihub').doc('sales').set({log:SALES_LOG}); renderDashboard();}
 
 function init(){
-  if(location.search.includes('client')){history.replaceState(null,'',location.pathname);}
+  // FIX #2: REMOVED history.replaceState. KEEP?client IN URL SO REFRESH STAYS CLIENT
   if(IS_CLIENT){
     CURRENT_USER=USERS.client; CURRENT_ROLE='client';
     document.getElementById('clientApp').classList.remove('hidden');
@@ -189,7 +185,19 @@ function canDelete(){return CURRENT_ROLE==='owner';}
 function canEdit(){return CURRENT_ROLE==='owner'||CURRENT_ROLE==='manager';}
 
 function renderDashboard(){let t=new Date().toDateString();let s=SALES_LOG.filter(x=>new Date(x.date).toDateString()===t);let ts=s.reduce((a,b)=>a+b.total,0);let tp=s.reduce((a,b)=>a+b.profit,0);let top=s.length?s.reduce((a,b)=>a.qty>b.qty?a:b):{name:'N/A',qty:0};let lc=Object.values(HUBS).flatMap(h=>h.products).filter(p=>p.stock<LOW_STOCK_LIMIT).length;document.getElementById('dashboard').innerHTML=`<div class="kpi-box"><small>SALES TODAY</small><br><b>R${ts.toFixed(2)}</b></div><div class="kpi-box"><small>PROFIT</small><br><b>R${tp.toFixed(2)}</b></div><div class="kpi-box"><small>TOP ITEM</small><br><b>${top.name}</b></div><div class="kpi-box"><small>LOW STOCK</small><br><b>${lc}</b></div>`;}
-function checkLowStock(){let l=Object.entries(HUBS).flatMap(([k,h])=>h.products.filter(p=>p.stock<LOW_STOCK_LIMIT).map(p=>`${h.name.split('|')[0]}: ${p.name} ${p.stock}`));let d=document.getElementById('lowStockAlert');d.innerHTML=l.length?`<div class="alert">⚠️ LOW STOCK: ${l.join(', ')}</div>`:'';if(l.length&&!sessionStorage.getItem('alertSent')){window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('LOW STOCK: '+l.join(', '))}`,'_blank');sessionStorage.setItem('alertSent','1');}else if(!l.length){sessionStorage.removeItem('alertSent');}}
+
+// FIX #1: NO MORE WHATSAPP AUTO ALERT. ONLY DASHBOARD BANNER
+function checkLowStock(){
+  let l=Object.entries(HUBS).flatMap(([k,h])=>h.products.filter(p=>p.stock<LOW_STOCK_LIMIT).map(p=>`${h.name.split('|')[0]}: ${p.name} ${p.stock}`));
+
+  // ADMIN BANNER
+  let d=document.getElementById('lowStockAlert');
+  d.innerHTML=l.length?`<div class="alert">⚠️ LOW STOCK: ${l.join(', ')}</div>`:'';
+
+  // CLIENT BANNER
+  let dc=document.getElementById('clientLowStockAlert');
+  if(dc){dc.innerHTML=l.length?`<div class="alert">⚠️ LOW STOCK: ${l.join(', ')}</div>`:'';}
+}
 
 function startScanner(){document.getElementById('scannerModal').classList.add('active'); HTML5QrCode = new Html5Qrcode("reader"); HTML5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);}
 function stopScanner(){closeModal('scannerModal');}
@@ -222,7 +230,7 @@ function openClientInvoice(){if(CART.length===0)return notify('Cart empty');let 
 async function saveInvoice(){let c=IS_CLIENT?CART:ADMIN_CART;if(c.length===0)return notify('Cart empty');const cl=document.getElementById('invClient').value.trim();const ph=document.getElementById('invPhone').value.trim();const ad=document.getElementById('invAddr').value.trim();if(!cl||!ph||!ad)return notify('Fill all');const d=new jsPDF();const no='INV'+Date.now();const sub=c.reduce((a,b)=>a+b.price*b.qty,0);const vat=sub*0.15;const tot=sub+vat;const pr=c.reduce((a,b)=>(b.price-b.cost)*b.qty,0);d.text(document.getElementById('invCompany').value,14,20);d.text(document.getElementById('invReg').value,14,27);d.text('INVOICE: '+no,140,20);d.text(new Date().toLocaleDateString(),140,27);d.text('BILL TO:',14,40);d.text(cl,14,46);d.text(ph,14,52);d.text(ad,14,58);let y=75;d.text('ITEM',14,y);d.text('QTY',90,y);d.text('PRICE',120,y);d.text('TOTAL',160,y);y+=8;c.forEach(i=>{d.text(i.name.substring(0,25),14,y);d.text(i.qty.toString(),90,y);d.text('R'+i.price,120,y);d.text('R'+(i.price*i.qty).toFixed(2),160,y);y+=7;});y+=5;d.text('Subtotal: R'+sub.toFixed(2),140,y);y+=7;d.text('VAT 15%: R'+vat.toFixed(2),140,y);y+=7;d.setFontSize(12);d.text('TOTAL: R'+tot.toFixed(2),140,y);document.getElementById('qrcanvas').innerHTML='';new QRCode(document.getElementById('qrcanvas'),{text:no+'|R'+tot.toFixed(2),width:64,height:64});d.addImage(document.getElementById('qrcanvas').querySelector('img').src,'PNG',140,y+5,30,30);d.save(no+'.pdf');SALES_LOG.push({date:new Date().toISOString(),inv:no,total:tot,profit:pr,user:CURRENT_USER.name,items:c.map(i=>({name:i.name,qty:i.qty})),topItem:c.reduce((a,b)=>a.qty>b.qty?a:b).name});await saveSales();c.forEach(it=>{let p=Object.values(HUBS).flatMap(h=>h.products).find(x=>x.sku===it.sku);if(p)p.stock=Math.max(0,p.stock-it.qty);});await saveHubs();c.length=0;updateCartFloat();updateAdminCartFloat();closeModal('invoiceModal');notify('PDF Generated');}
 
 renderPin();
-init(); // BOOT APP. FIXED.
+init();
 </script>
 </body>
 </html>
