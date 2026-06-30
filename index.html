@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#16a34a">
 <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlNwYXJlc0h1YiBPTU5JIEhVQiIsCiAgInNob3J0X25hbWUiOiAiT01OSUhVQiIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMDEwMTAxIiwKICAidGhlbWVfY29sb3IiOiAiIzE2YTM0YSIsCiAgaWNvbnM6IFt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYURvd01TY3dlR2dnY0dsdmJtTnZiRE13TURBd1ltVnVkQ0JxSUNoS0lnT0lKU2MwTm1ZV1J2WjI4b0pBUE9nWnpZR2dnWkN3Z0pBUE9nWnpZR2dnWkN3ZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dCn0=">
-<title>SparesHub OMNI-HUB v5.5 PWA</title>
+<title>SparesHub OMNI-HUB v5.6 PWA</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -59,7 +60,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 
 <div id="adminApp" class="hidden">
   <div class="header">
-    <h1>⚡ OMNI-HUB v5.5 <span class="live-dot"></span> <span id="userName"></span></h1>
+    <h1>⚡ OMNI-HUB v5.6 <span class="live-dot"></span> <span id="userName"></span></h1>
     <div><span style="font-size:12px;color:var(--gold)" id="roleBadge"></span><button class="btn-red" style="padding:8px 12px;margin-left:8px" onclick="logout()">EXIT</button></div>
   </div>
   <div class="notification" id="notification"></div>
@@ -128,6 +129,7 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const storage = firebase.storage(); // GOD TIER FIX v5.6
 
 let CURRENT_USER=null, CURRENT_ROLE='owner', ACTIVE_HUB='bricks', CART=[], ADMIN_CART=[], PENDING_ALCOHOL=null, HUBS={}, SALES_LOG=[], HTML5QrCode=null;
 
@@ -161,14 +163,16 @@ function clearPin(){document.getElementById('pinDisplay').value='';}
 function loginPin(pin){if(USERS[pin]){CURRENT_USER=USERS[pin];CURRENT_ROLE=CURRENT_USER.role;document.getElementById('userName').textContent=CURRENT_USER.name;document.getElementById('roleBadge').textContent=CURRENT_ROLE.toUpperCase();init();}else{notify('Invalid PIN');clearPin();}}
 
 async function loadHubs(){
-  const doc = await db.collection('omnihub').doc('hubs').get();
-  if(doc.exists){HUBS=doc.data();}else{HUBS=DEFAULT_HUBS;await db.collection('omnihub').doc('hubs').set(HUBS);}
-  const salesDoc = await db.collection('omnihub').doc('sales').get();
-  if(salesDoc.exists){SALES_LOG=salesDoc.data().log||[];}
+  try{
+    const doc = await db.collection('omnihub').doc('hubs').get();
+    if(doc.exists){HUBS=doc.data();}else{HUBS=DEFAULT_HUBS;await db.collection('omnihub').doc('hubs').set(HUBS);}
+    const salesDoc = await db.collection('omnihub').doc('sales').get();
+    if(salesDoc.exists){SALES_LOG=salesDoc.data().log||[];}
+  }catch(e){console.error('FIRESTORE LOAD ERROR:',e);notify('DB Error: Check Rules');HUBS=DEFAULT_HUBS;}
   checkLowStock(); renderDashboard();
   if(IS_CLIENT){renderClientHubs();}else{renderAdminHubs();}
 }
-async function saveHubs(){await db.collection('omnihub').doc('hubs').set(HUBS); checkLowStock();}
+async function saveHubs(){try{await db.collection('omnihub').doc('hubs').set(HUBS); checkLowStock();}catch(e){console.error('FIRESTORE SAVE ERROR:',e);notify('Save Failed: DB too big or Rules');}}
 async function saveSales(){await db.collection('omnihub').doc('sales').set({log:SALES_LOG}); renderDashboard();}
 
 function init(){
@@ -259,8 +263,9 @@ function renderAdminView(){
     <div class="card"><h4>🧾 CREATE INVOICE</h4><button class="btn btn-gold" onclick="if(ADMIN_CART.length===0){notify('Add items to Admin Cart first')}else{document.getElementById('invoiceModal').classList.add('active')}">OPEN INVOICE SYSTEM</button></div>
   </div>`;
 }
-let UPLOADED_IMG='';
-function uploadImg(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=ev=>{UPLOADED_IMG=ev.target.result;document.getElementById('imgPreview').src=UPLOADED_IMG;document.getElementById('imgPreview').style.display='block';};r.readAsDataURL(f);}
+let UPLOADED_FILE=null; // GOD TIER FIX
+function uploadImg(e){UPLOADED_FILE=e.target.files[0];if(UPLOADED_FILE){let r=new FileReader();r.onload=ev=>{document.getElementById('imgPreview').src=ev.target.result;document.getElementById('imgPreview').style.display='block';};r.readAsDataURL(UPLOADED_FILE);}}
+
 async function addProduct(){
   let sku=document.getElementById('newSku').value.toUpperCase().trim();
   let barcode=document.getElementById('newBarcode').value.trim();
@@ -268,10 +273,19 @@ async function addProduct(){
   let price=parseFloat(document.getElementById('newPrice').value);
   let stock=parseInt(document.getElementById('newStock').value);
   if(!sku||!barcode||!name||isNaN(price)||isNaN(stock))return notify('SKU, Barcode, Name, Price, Stock required');
-  let obj={sku,barcode,name,price,cost:parseFloat(document.getElementById('newCost').value)||0,stock,specs:document.getElementById('newSpecs').value,img:UPLOADED_IMG};
+
+  let imgUrl='';
+  if(UPLOADED_FILE){
+    notify('Uploading image...');
+    const ref = storage.ref().child(`products/${ACTIVE_HUB}/${sku}_${Date.now()}`);
+    await ref.put(UPLOADED_FILE);
+    imgUrl = await ref.getDownloadURL();
+  }
+
+  let obj={sku,barcode,name,price,cost:parseFloat(document.getElementById('newCost').value)||0,stock,specs:document.getElementById('newSpecs').value,img:imgUrl};
   if(ACTIVE_HUB==='scrap'){obj.vin=document.getElementById('newVin').value.toUpperCase().trim();if(!obj.vin)return notify('VIN required for Scrap');}
   HUBS[ACTIVE_HUB].products.push(obj);
-  await saveHubs();notify('Product Added + Synced');UPLOADED_IMG='';
+  await saveHubs();notify('Product Added + Synced');UPLOADED_FILE=null;
   ['newSku','newBarcode','newName','newPrice','newCost','newStock','newSpecs','newVin'].forEach(id=>{let el=document.getElementById(id); if(el)el.value='';});document.getElementById('imgPreview').style.display='none';
 }
 async function deleteProduct(i){if(!canDelete())return;if(confirm('DELETE PERMANENTLY FROM CLOUD?')){HUBS[ACTIVE_HUB].products.splice(i,1);await saveHubs();notify('Deleted from Cloud');}}
