@@ -1,15 +1,10 @@
 {
-  "name": "SparesHub OMNI-HUB",
-  "short_name": "OMNIHUB",
+  "name": "OMNI-HUB",
+  "short_name": "OMNI-HUB", 
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#010101",
+  "scope": ".",
+  "background_color": "#0a0a0a",
   "theme_color": "#16a34a",
-  "icons": [
-    {
-      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIGZpbGw9IiMwMTAxMDEiLz48cGF0aCBkPSJNOTYgNjRMNjQgOTZIODBMOTYgNjRaIiBmaWxsPSIjMTZhMzRhIi8+PHBhdGggZD0iTTk2IDEyOEwxMjggOTZIMTEyTjk2IDEyOFoiIGZpbGw9IiMzYjgyZjYiLz48L3N2Zz4=",
-      "sizes": "192x192",
-      "type": "image/svg+xml"
-    }
-  ]
+  "icons": [{"src": "https://img.icons8.com/color/512/warehouse.png", "sizes": "512x512", "type": "image/png"}]
 }
