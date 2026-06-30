@@ -2,269 +2,113 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#16a34a">
-<link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlNwYXJlc0h1YiBPTU5JIEhVQiIsCiAgInNob3J0X25hbWUiOiAiT01OSUhVQiIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMDEwMTAxIiwKICAidGhlbWVfY29sb3IiOiAiIzE2YTM0YSIsCiAgaWNvbnM6IFt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYURvd01TY3dlR2dnY0dsdmJtTnZiRE13TURBd1ltVnVkQ0JxSUNoS0lnT0lKU2MwTm1ZV1J2WjI4b0pBUE9nWnpZR2dnWkN3Z0pBUE9nWnpZR2dnWkN3ZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dCn0=">
-<title>SparesHub OMNI-HUB v5.6 PWA</title>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMNI-HUB ERP v5.8 CATBOX</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 <style>
-:root{--bg:#0a0a0a;--card:#111827;--green:#16a34a;--red:#dc2626;--blue:#3b82f6;--gold:#fbbf24;--orange:#ea580c;--purple:#a855f7}
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;touch-action:manipulation}
-body{background:var(--bg);color:#f1f5f9;font-size:14px}
-.header{background:linear-gradient(135deg,#16a34a,#3b82f6,#a855f7);padding:12px;position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center}
-.client-header{background:#111827;padding:12px;text-align:center}
-.hub-tabs{display:flex;gap:6px;overflow-x:auto;padding:12px;background:#111827;border-bottom:1px solid #1f2937}
-.hub-btn{flex:0 0 auto;padding:12px 16px;background:#1f2937;border-radius:10px;border:2px solid #374151;font-weight:800;cursor:pointer;font-size:13px;white-space:nowrap}
-.hub-btn.active{border-color:var(--green);background:var(--green);color:#000}
-.hub-view{display:none;padding:12px}
-.hub-view.active{display:block}
-.card{background:var(--card);border-radius:12px;padding:12px;margin-bottom:12px;border:1px solid #1f2937}
-.btn{width:100%;padding:14px;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-size:15px;margin-top:8px;background:var(--green);color:#000}
-.btn:disabled{opacity:0.4;cursor:not-allowed}
-.btn-sm{padding:6px 10px;font-size:12px;width:auto;margin:2px}
-.btn-blue{background:var(--blue);color:#fff}.btn-red{background:var(--red);color:#fff}.btn-purple{background:var(--purple)}.btn-orange{background:var(--orange)}.btn-gold{background:var(--gold);color:#000}
-.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
-.prod{background:#1f2937;padding:0;border-radius:12px;cursor:pointer;text-align:center;border:1px solid #374151;overflow:hidden;position:relative}
-.prod img{width:100%;height:100px;object-fit:cover;background:#222}
-.prod-body{padding:8px}
-.delete-x{position:absolute;top:4px;right:4px;background:var(--red);color:#fff;border-radius:50%;width:24px;height:24px;border:none;font-weight:800;z-index:2}
-.stock-controls{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
-input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #374151;background:#0a0a0a;color:#f1f5f9;margin-bottom:10px}
-.notification{position:fixed;top:20px;right:20px;background:var(--green);color:#000;padding:12px;border-radius:10px;z-index:9999;display:none;font-weight:800}
-.alert{background:var(--red);color:#fff;padding:10px;border-radius:10px;margin-bottom:12px;font-weight:800}
-.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:999}
-.modal.active{display:flex}
-.modal-card{background:var(--card);padding:20px;border-radius:16px;max-width:700px;width:95%;max-height:90vh;overflow-y:auto}
-.hidden{display:none}
-.float-cart{position:fixed;bottom:20px;right:20px;background:var(--green);color:#000;border-radius:50px;padding:16px 24px;font-weight:800;z-index:99;box-shadow:0 4px 20px #000}
-.float-install{position:fixed;bottom:90px;right:20px;background:var(--gold);color:#000;border-radius:50px;padding:14px 20px;font-weight:800;z-index:99;box-shadow:0 4px 20px #000;display:none}
-.share-box{background:#1f2937;padding:12px;border-radius:10px;margin:12px 0}
-.badge{background:var(--purple);padding:2px 6px;border-radius:6px;font-size:10px}
-.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.kpi-box{background:#1f2937;padding:10px;border-radius:10px;text-align:center}
-.kpi-box b{font-size:18px;color:var(--gold)}
-.row{display:flex;justify-content:space-between;align-items:center;margin:6px 0}
-.live-dot{width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;animation:pulse 2s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 #16a34a}70%{box-shadow:0 0 0 10px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
-#reader{width:100%;border-radius:12px;overflow:hidden}
-.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
-.pin-btn{padding:20px;font-size:24px;font-weight:800;background:#1f2937;border:none;color:#fff;border-radius:12px}
+body{font-family:'Inter',sans-serif;background:#0d1117;color:#c9d1d9} 
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:16px;margin-bottom:12px} 
+.btn{padding:8px 14px;border-radius:8px;font-weight:600;cursor:pointer;transition:.2s;border:none} 
+.btn:hover{opacity:.85} 
+.btn-primary{background:#16a34a;color:#fff} 
+.btn-danger{background:#ef4444;color:#fff} 
+.btn-amber{background:#f59e0b;color:#111} 
+.btn-blue{background:#2563eb;color:#fff} 
+.btn-purple{background:#8b5cf6;color:#fff} 
+input,select,textarea{background:#0d1117;border:1px solid #30363d;color:#c9d1d9;border-radius:8px;padding:8px;width:100%;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:12px} 
+th,td{padding:8px;border-bottom:1px solid #30363d;text-align:left} 
+th{background:#21262d;position:sticky;top:0} 
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:50;padding:10px} 
+.modal-content{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;max-width:900px;width:100%;max-height:90vh;overflow:auto}
+#barcodeCanvas,#qrCanvas{display:none}
+img.thumb{width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #30363d}
 </style>
 </head>
 <body>
-
-<div id="adminApp" class="hidden">
-  <div class="header">
-    <h1>⚡ OMNI-HUB v5.6 <span class="live-dot"></span> <span id="userName"></span></h1>
-    <div><span style="font-size:12px;color:var(--gold)" id="roleBadge"></span><button class="btn-red" style="padding:8px 12px;margin-left:8px" onclick="logout()">EXIT</button></div>
+<div class="p-4 max-w-7xl mx-auto">
+  <h1 class="text-2xl font-bold text-green-400 mb-2">⚙️ OMNI-HUB ERP v5.8 CATBOX</h1>
+  <p class="text-sm text-gray-400 mb-4">Firebase Firestore + Catbox.moe Images = R0/MO</p>
+  
+  <div id="loginBox" class="card max-w-sm mx-auto">
+    <h2 class="text-xl font-bold mb-3">Login</h2>
+    <input id="pin" type="password" placeholder="PIN" value="1234">
+    <button class="btn btn-primary w-full mt-3" onclick="login()">Enter</button>
   </div>
-  <div class="notification" id="notification"></div>
-  <div id="lowStockAlert"></div>
 
-  <div id="scannerModal" class="modal"><div class="modal-card"><h2>📷 BARCODE SCANNER</h2><div id="reader"></div><button class="btn btn-red" onclick="stopScanner()">CLOSE</button></div></div>
-  <div id="ageModal" class="modal"><div class="modal-card"><h2>🍺 TAVERN COMPLIANCE - 18+ ONLY</h2><button class="btn" onclick="ageConfirm(true)">YES</button><button class="btn btn-red" onclick="ageConfirm(false)">NO</button></div></div>
-  <div id="invoiceModal" class="modal"><div class="modal-card"><h2>🧾 SOPHISTICATED INVOICE</h2>
-    <input id="invCompany" value="SparesHub Pty Ltd"><input id="invReg" value="VAT: 4123456789">
-    <input id="invClient" placeholder="Client Name" required><input id="invPhone" placeholder="Phone" required>
-    <textarea id="invAddr" placeholder="Address" required></textarea>
-    <button class="btn" onclick="saveInvoice()">GENERATE PDF + QR</button><button class="btn btn-red" onclick="closeModal('invoiceModal')">CANCEL</button>
-  </div></div>
-  <div id="qrcanvas" class="hidden"></div>
-
-  <div class="share-box"><b>CLIENT LINK:</b> <input id="clientLink" readonly onclick="this.select()"><button class="btn btn-blue btn-sm" onclick="copyLink()">COPY</button></div>
-
-  <div class="card"><h3>📊 SALES DASHBOARD [LIVE]</h3><div class="kpi" id="dashboard"></div></div>
-  <div class="card"><button class="btn btn-blue" onclick="startScanner()">📷 SCAN BARCODE</button></div>
-
-  <div class="hub-tabs" id="hubTabs"></div>
-  <div id="hubViews"></div>
-  <div class="float-cart" onclick="openAdminCart()">🛒 <span id="adminCartCount">0</span> | R<span id="adminCartTotal">0.00</span></div>
-  <div id="adminCartModal" class="modal"><div class="modal-card"><h2>🛒 ADMIN CART</h2><div id="adminCartList"></div><button class="btn btn-gold" onclick="document.getElementById('invoiceModal').classList.add('active');closeModal('adminCartModal')">CREATE INVOICE</button><button class="btn btn-red" onclick="closeModal('adminCartModal')">CLOSE</button></div></div>
-</div>
-
-<div id="clientApp" class="hidden">
-  <div class="client-header"><h1>⚡ SparesHub STORE <span class="live-dot"></span></h1></div>
-  <div class="float-install" id="installBtn" onclick="installApp()">📲 INSTALL APP</div>
-  <div class="hub-tabs" id="clientHubTabs"></div>
-  <div id="clientHubViews"></div>
-  <div class="float-cart" onclick="openClientCart()">🛒 <span id="cartCount">0</span> | R<span id="cartTotal">0.00</span></div>
-  <div id="clientCartModal" class="modal"><div class="modal-card"><h2>🛒 YOUR CART</h2><div id="clientCartList"></div><button class="btn" onclick="openClientInvoice()">GET QUOTE ON WHATSAPP</button><button class="btn btn-red" onclick="closeModal('clientCartModal')">CLOSE</button></div></div>
-</div>
-
-<div id="loginScreen">
-  <div class="modal-card" style="margin:10vh auto">
-    <h2>⚡ OMNI-HUB ADMIN PIN</h2>
-    <input id="pinDisplay" readonly placeholder="Enter 4-Digit PIN" style="font-size:24px;text-align:center">
-    <div class="pin-grid" id="pinGrid"></div>
-    <button class="btn btn-red" onclick="clearPin()">CLEAR</button>
+  <div id="app" style="display:none">
+    <div class="flex flex-wrap gap-2 mb-4">
+      <button class="btn btn-primary" onclick="switchHub('scrap')">Scrap</button>
+      <button class="btn btn-primary" onclick="switchHub('house')">House</button>
+      <button class="btn btn-primary" onclick="switchHub('workshop')">Workshop</button>
+      <button class="btn btn-primary" onclick="switchHub('spares')">Spares</button>
+      <button class="btn btn-primary" onclick="switchHub('boss')">Boss</button>
+      <button class="btn btn-amber" onclick="openPos()">POS</button>
+      <button class="btn btn-blue" onclick="openStock()">Stock</button>
+      <button class="btn btn-purple" onclick="exportAll()">Export ZIP</button>
+      <button class="btn btn-danger" onclick="logout()">Logout</button>
+    </div>
+    <div id="hubTitle" class="text-xl font-bold mb-3"></div>
+    <div id="hubContent"></div>
   </div>
 </div>
+
+<canvas id="barcodeCanvas"></canvas>
+<canvas id="qrCanvas"></canvas>
+
+<div id="posModal" class="modal"><div class="modal-content"><h2 class="text-xl font-bold mb-3">POS</h2><input id="posBarcode" placeholder="Scan Barcode" onkeyup="if(event.key==='Enter')addToCart()"><div id="posCart" class="mt-3"></div><div id="posTotal" class="font-bold mt-2"></div><button class="btn btn-primary mt-3" onclick="checkout()">Checkout PDF</button><button class="btn mt-3" onclick="closePos()">Close</button></div></div>
+<div id="stockModal" class="modal"><div class="modal-content"><h2 class="text-xl font-bold mb-3">Stock Management</h2><div id="stockList"></div><button class="btn mt-3" onclick="closeStock()">Close</button></div></div>
 
 <script>
-const { jsPDF } = window.jspdf;
-const IS_CLIENT = window.location.search.includes('client');
-const WHATSAPP_NUMBER = '27698949596';
-const LOW_STOCK_LIMIT = 10;
-let DEFERRED_PROMPT = null;
-
-const USERS = {
-  '1234':{name:'CEO',role:'owner'},
-  '5678':{name:'Manager',role:'manager'},
-  '0000':{name:'Cashier',role:'cashier'}
-};
-
-const firebaseConfig = {
-    apiKey: "AIzaSyDU3m6DUDpXugBs-PW4Aqn_WvbbHbGq6mg",
-    authDomain: "omega---dms.firebaseapp.com",
-    projectId: "omega---dms",
-    storageBucket: "omega---dms.firebasestorage.app",
-    messagingSenderId: "194803652821",
-    appId: "1:194803652821:web:07c6dc73aba1ce681a2a5c"
-  };
-
+const firebaseConfig={apiKey:"AIzaSyDpj4cAajVUTyPrUmkPIET0fjbTaOdmah0",authDomain:"omega---dms.firebaseapp.com",projectId:"omega---dms",storageBucket:"omega---dms.firebasestorage.app",messagingSenderId:"143843997851",appId:"1:143843997851:web:fe845a40c6939e7f4efc98"};
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const storage = firebase.storage(); // GOD TIER FIX v5.6
+const db=firebase.firestore();
+const DOC_REF=db.collection('omni_hub').doc('data_v58');
 
-let CURRENT_USER=null, CURRENT_ROLE='owner', ACTIVE_HUB='bricks', CART=[], ADMIN_CART=[], PENDING_ALCOHOL=null, HUBS={}, SALES_LOG=[], HTML5QrCode=null;
+let HUBS={scrap:{name:'Scrap Hub',products:[]},house:{name:'House Hub',products:[]},workshop:{name:'Workshop Hub',products:[]},spares:{name:'Spares Hub',products:[]},boss:{name:'Boss Hub',products:[]}};
+let ACTIVE_HUB='scrap';let CART=[];let UPLOADED_FILE=null;let UPLOAD_URL='';
 
-const DEFAULT_HUBS = {
-  bricks:{name:'🧱 Bricks | Builders OS', kpis:{moq:'1000',delivery:'48H',credit:'30'}, products:[{sku:'B6',barcode:'6001234567890',name:'6" Brick NFX',price:3.20,stock:500,cost:2.10,img:'https://images.unsplash.com/photo-1591088398332-8a7791972843?w=300',specs:'14Mpa, SABS 227'}]},
-  tavern:{name:'🍺 Tavern | Makro Liquor OS', kpis:{license:'RICA',cold:'-4C',pos:'Scan'}, products:[{sku:'BEER',barcode:'6001234567891',name:'Castle Lager 500ml',price:22,stock:100,cost:15,alcohol:true,img:'https://images.unsplash.com/photo-1608270586620-57bd79aacb6d?w=300',specs:'18+ ID Scan Required'}]},
-  water:{name:'💧 Water | Aqua Pure OS', kpis:{ppm:'<50',test:'SABS',route:'GPS'}, products:[{sku:'WATER25',barcode:'6001234567892',name:'Purified Water 25L',price:35,stock:50,cost:20,img:'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300',specs:'SABS 241, RO Filtered'}]},
-  diesel:{name:'⛽ Diesel | Sasol OS', kpis:{octane:'50ppm',tank:'10K L',card:'Fleet'}, products:[{sku:'DSL',barcode:'6001234567893',name:'Diesel 50ppm /L',price:24.50,stock:5000,cost:22,img:'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=300',specs:'DOP Approved'}]},
-  sand:{name:'🏜️ Sand | Afrimat OS', kpis:{grade:'River',ton:'1.4T',site:'Delivery'}, products:[{sku:'RIVER',barcode:'6001234567894',name:'River Sand /m³',price:450,stock:100,cost:300,img:'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=300',specs:'SABS, Washed'}]},
-  chickens:{name:'🐔 Chickens | Astral OS', kpis:{biosec:'Level 2',weight:'1.8kg',halal:'Halaal'}, products:[{sku:'CHICK',barcode:'6001234567895',name:'Live Broiler /kg',price:28,stock:100,cost:20,img:'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=300',specs:'Halaal'}]},
-  scrap:{name:'🔩 Scrap | BMW OS', kpis:{vin:'Decode',cat:'A/B/C',yard:'GPS'}, products:[{sku:'TYRE15',barcode:'6001234567896',name:'VW Polo Tyre 15"',price:350,stock:12,cost:200,vin:'WVWZZZ1JZYW000001',img:'https://images.unsplash.com/photo-1486262710619-324dbdee2a17?w=300',specs:'DOT 2023'}]},
-  transport:{name:'🚌 Transport | Greyhound OS', kpis:{gps:'Live',seats:'56',card:'Book'}, products:[{sku:'JHB',barcode:'6001234567897',name:'Polokwane-JHB Seat',price:80,stock:20,cost:50,img:'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=300',specs:'Leather'}]},
-  restaurant:{name:'🍔 Restaurant | Nandos OS', kpis:{pos:'Kitchen',prep:'8min',loyal:'App'}, products:[{sku:'BURGER',barcode:'6001234567898',name:'Chicken Burger',price:55,stock:0,cost:30,img:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300',specs:'Halal'}]}
-};
+function notify(m){alert(m)}
+function login(){if(document.getElementById('pin').value==='1234'){document.getElementById('loginBox').style.display='none';document.getElementById('app').style.display='block';loadHubs();}else notify('Wrong PIN')}
+function logout(){document.getElementById('app').style.display='none';document.getElementById('loginBox').style.display='block'}
 
-function notify(msg){let n=document.getElementById('notification');n.textContent=msg;n.style.display='block';setTimeout(()=>n.style.display='none',2500);}
-function closeModal(id){document.getElementById(id).classList.remove('active'); if(HTML5QrCode){HTML5QrCode.stop();}}
-function copyLink(){navigator.clipboard.writeText(document.getElementById('clientLink').value);notify('Link Copied');}
+async function loadHubs(){let snap=await DOC_REF.get();if(snap.exists)HUBS=snap.data().hubs;renderHub()}
+async function saveHubs(){await DOC_REF.set({hubs:HUBS,updated:Date.now()})}
 
-// PWA INSTALL
-window.addEventListener('beforeinstallprompt', (e) => {e.preventDefault(); DEFERRED_PROMPT = e; if(IS_CLIENT) document.getElementById('installBtn').style.display='block';});
-function installApp(){if(DEFERRED_PROMPT){DEFERRED_PROMPT.prompt(); DEFERRED_PROMPT.userChoice.then(()=>{document.getElementById('installBtn').style.display='none';});}}
+function switchHub(h){ACTIVE_HUB=h;renderHub()}
+function renderHub(){document.getElementById('hubTitle').innerText=HUBS[ACTIVE_HUB].name;let html=`<div class="card"><h3 class="font-bold mb-2">Add Product</h3><div class="grid grid-cols-2 gap-2">`;
+html+=`<input id="newSku" placeholder="SKU"><input id="newBarcode" placeholder="Barcode"><input id="newName" placeholder="Name"><input id="newPrice" type="number" placeholder="Price">`;
+html+=`<input id="newCost" type="number" placeholder="Cost"><input id="newStock" type="number" placeholder="Stock"><input id="newSpecs" placeholder="Specs">`;
+if(ACTIVE_HUB==='scrap')html+=`<input id="newVin" placeholder="VIN">`;
+html+=`<input id="newImg" type="file" accept="image/*" onchange="uploadCatbox(event)">`;
+html+=`</div><img id="imgPreview" class="thumb mt-2" style="display:none"><button class="btn btn-primary mt-2" onclick="addProduct()">Add Product</button></div>`;
+html+=`<div class="card"><input id="search" placeholder="Search SKU/Name/Barcode" onkeyup="renderTable()"><table><thead><tr><th>Img</th><th>SKU</th><th>Name</th><th>Barcode</th><th>Price</th><th>Stock</th><th></th></tr></thead><tbody id="tbl"></tbody></table></div>`;
+document.getElementById('hubContent').innerHTML=html;renderTable()
+}
 
-// SERVICE WORKER INLINE
-if('serviceWorker' in navigator){navigator.serviceWorker.register('data:text/javascript,self.addEventListener("fetch",e=>e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))));');}
+function renderTable(){let q=document.getElementById('search')?.value.toLowerCase()||'';let rows=HUBS[ACTIVE_HUB].products.filter(p=>p.sku.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)||p.barcode.includes(q)).map((p,i)=>`<tr><td>${p.img?`<img src="${p.img}" class="thumb">`:''}</td><td>${p.sku}</td><td>${p.name}</td><td>${p.barcode}</td><td>R${p.price}</td><td>${p.stock}</td><td><button class="btn btn-danger text-xs" onclick="delProd(${i})">Del</button></td></tr>`).join('');document.getElementById('tbl').innerHTML=rows||'<tr><td colspan="7">No products</td></tr>'}
+function delProd(i){HUBS[ACTIVE_HUB].products.splice(i,1);saveHubs();renderTable();notify('Deleted')}
 
-// PIN SYSTEM ADMIN ONLY
-function renderPin(){let g=document.getElementById('pinGrid');g.innerHTML=[1,2,3,4,5,6,7,8,9,0,'<','OK'].map(k=>`<button class="pin-btn" onclick="pressPin('${k}')">${k}</button>`).join('');}
-function pressPin(k){let d=document.getElementById('pinDisplay');if(k==='OK'){loginPin(d.value);}else if(k==='<'){d.value=d.value.slice(0,-1);}else if(d.value.length<4){d.value+=k;}}
-function clearPin(){document.getElementById('pinDisplay').value='';}
-function loginPin(pin){if(USERS[pin]){CURRENT_USER=USERS[pin];CURRENT_ROLE=CURRENT_USER.role;document.getElementById('userName').textContent=CURRENT_USER.name;document.getElementById('roleBadge').textContent=CURRENT_ROLE.toUpperCase();init();}else{notify('Invalid PIN');clearPin();}}
-
-async function loadHubs(){
+// CATBOX UPLOAD = THE GOD TIER FIX
+async function uploadCatbox(e){
+  let file=e.target.files[0];if(!file)return;
+  document.getElementById('imgPreview').src='';document.getElementById('imgPreview').style.display='none';
+  notify('Uploading to Catbox...');
+  let fd=new FormData();fd.append('reqtype','fileupload');fd.append('fileToUpload',file);
   try{
-    const doc = await db.collection('omnihub').doc('hubs').get();
-    if(doc.exists){HUBS=doc.data();}else{HUBS=DEFAULT_HUBS;await db.collection('omnihub').doc('hubs').set(HUBS);}
-    const salesDoc = await db.collection('omnihub').doc('sales').get();
-    if(salesDoc.exists){SALES_LOG=salesDoc.data().log||[];}
-  }catch(e){console.error('FIRESTORE LOAD ERROR:',e);notify('DB Error: Check Rules');HUBS=DEFAULT_HUBS;}
-  checkLowStock(); renderDashboard();
-  if(IS_CLIENT){renderClientHubs();}else{renderAdminHubs();}
+    let res=await fetch('https://catbox.moe/user/api.php',{method:'POST',body:fd});
+    let url=await res.text();
+    if(url.startsWith('http')){UPLOAD_URL=url;document.getElementById('imgPreview').src=url;document.getElementById('imgPreview').style.display='block';notify('Image OK')}
+    else notify('Catbox Error: '+url)
+  }catch(err){notify('Upload failed: '+err.message)}
 }
-async function saveHubs(){try{await db.collection('omnihub').doc('hubs').set(HUBS); checkLowStock();}catch(e){console.error('FIRESTORE SAVE ERROR:',e);notify('Save Failed: DB too big or Rules');}}
-async function saveSales(){await db.collection('omnihub').doc('sales').set({log:SALES_LOG}); renderDashboard();}
-
-function init(){
-  if(IS_CLIENT){
-    document.getElementById('clientApp').classList.remove('hidden');
-    document.getElementById('loginScreen').classList.add('hidden');
-    loadHubs();
-    db.collection('omnihub').doc('hubs').onSnapshot(loadHubs);
-  }else{
-    document.getElementById('adminApp').classList.remove('hidden');
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('clientLink').value = window.location.origin + window.location.pathname + '?client';
-    loadHubs();
-    db.collection('omnihub').doc('hubs').onSnapshot(loadHubs);
-    db.collection('omnihub').doc('sales').onSnapshot(loadHubs);
-  }
-}
-function logout(){window.location.search='';}
-
-function canDelete(){return CURRENT_ROLE==='owner';}
-function canEdit(){return CURRENT_ROLE==='owner'||CURRENT_ROLE==='manager';}
-
-function renderDashboard(){
-  let today = new Date().toDateString();
-  let todaySales = SALES_LOG.filter(s=>new Date(s.date).toDateString()===today);
-  let totalSales = todaySales.reduce((a,b)=>a+b.total,0);
-  let totalProfit = todaySales.reduce((a,b)=>a+b.profit,0);
-  let top = todaySales.length?todaySales.reduce((a,b)=>a.qty>b.qty?a:b):{name:'N/A',qty:0};
-  let lowCount = Object.values(HUBS).flatMap(h=>h.products).filter(p=>p.stock<LOW_STOCK_LIMIT).length;
-  document.getElementById('dashboard').innerHTML = `
-    <div class="kpi-box"><small>SALES TODAY</small><br><b>R${totalSales.toFixed(2)}</b></div>
-    <div class="kpi-box"><small>PROFIT</small><br><b>R${totalProfit.toFixed(2)}</b></div>
-    <div class="kpi-box"><small>TOP ITEM</small><br><b>${top.name}</b></div>
-    <div class="kpi-box"><small>LOW STOCK</small><br><b>${lowCount}</b></div>
-  `;
-}
-
-function checkLowStock(){
-  let low = Object.entries(HUBS).flatMap(([hubKey,h])=>h.products.filter(p=>p.stock<LOW_STOCK_LIMIT).map(p=>`${h.name.split('|')[0]}: ${p.name} ${p.stock}`));
-  let alertDiv = document.getElementById('lowStockAlert');
-  if(low.length>0){
-    alertDiv.innerHTML = `<div class="alert">⚠️ LOW STOCK ALERT: ${low.join(', ')}</div>`;
-    if(!sessionStorage.getItem('alertSent')){
-      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('LOW STOCK ALERT: '+low.join(', '))}`,'_blank');
-      sessionStorage.setItem('alertSent','1');
-    }
-  }else{alertDiv.innerHTML=''; sessionStorage.removeItem('alertSent');}
-}
-
-function startScanner(){document.getElementById('scannerModal').classList.add('active'); HTML5QrCode = new Html5Qrcode("reader"); HTML5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);}
-function stopScanner(){closeModal('scannerModal');}
-function onScanSuccess(code){stopScanner(); let p = Object.values(HUBS).flatMap(h=>h.products).find(x=>x.barcode===code); if(p){adminAddCart(p.sku); notify(`Scanned: ${p.name}`);} else{notify('Barcode not found');}}
-
-function renderAdminHubs(){
-  document.getElementById('hubTabs').innerHTML = Object.keys(HUBS).map(k=>`<div class="hub-btn ${k===ACTIVE_HUB?'active':''}" onclick="switchAdminHub('${k}')">${HUBS[k].name}</div>`).join('');
-  renderAdminView();
-}
-function switchAdminHub(h){ACTIVE_HUB=h;renderAdminHubs();}
-function renderAdminView(){
-  let h=HUBS[ACTIVE_HUB], p=h.products;
-  document.getElementById('hubViews').innerHTML = `
-  <div class="hub-view active">
-    <div class="card"><h3>${h.name}</h3><div class="kpi">${Object.entries(h.kpis).map(([k,v])=>`<div class="kpi-box"><small>${k.toUpperCase()}</small><br><b>${v}</b></div>`).join('')}</div></div>
-    <div class="card"><h4>📦 INVENTORY [LIVE]</h4>
-      <div class="product-grid">${p.map((x,i)=>`<div class="prod">
-        ${canDelete()?`<button class="delete-x" onclick="deleteProduct(${i})">X</button>`:''}
-        <img src="${x.img||''}"><div class="prod-body">${x.name}<br>R${x.price}<br><small>Stock:${x.stock}</small><br><small>BC:${x.barcode||'N/A'}</small><br><span class="badge">${x.specs}</span>
-        ${ACTIVE_HUB==='scrap'?`<br><small>VIN: ${x.vin||'N/A'}</small>`:''}
-        ${canEdit()?`<div class="stock-controls">
-          <button class="btn-sm btn-orange" onclick="adjStock(${i},-1)">-1</button>
-          <button class="btn-sm btn-blue" onclick="adjStock(${i},1)">+1</button>
-          <button class="btn-sm btn-purple" onclick="setStock(${i})">SET</button>
-          ${ACTIVE_HUB==='scrap'?`<button class="btn-sm btn-gold" onclick="editVin(${i})">VIN</button>`:''}
-          <button class="btn-sm btn-blue" onclick="adminAddCart('${x.sku}')">+CART</button>
-        </div>`:''}
-        </div></div>`).join('')}</div>
-      <hr style="margin:12px 0">
-      ${canEdit()?`<h4>+ ADD PRODUCT [GOD TIER]</h4>
-      <input id="newSku" placeholder="SKU*"><input id="newBarcode" placeholder="Barcode/EAN*">
-      <input id="newName" placeholder="Name*"><input id="newPrice" type="number" placeholder="Price*">
-      <input id="newCost" type="number" placeholder="Cost"><input id="newStock" type="number" placeholder="Stock*" value="0">
-      <input id="newSpecs" placeholder="Specs/SABS/VIN/Grade">
-      ${ACTIVE_HUB==='scrap'?`<input id="newVin" placeholder="VIN Number*">`:''}
-      <input id="newImg" type="file" accept="image/*" onchange="uploadImg(event)">
-      <img id="imgPreview" style="width:100%;max-height:120px;object-fit:cover;display:none">
-      <button class="btn btn-purple" onclick="addProduct()">SAVE PRODUCT</button>`:''}
-    </div>
-    <div class="card"><h4>🧾 CREATE INVOICE</h4><button class="btn btn-gold" onclick="if(ADMIN_CART.length===0){notify('Add items to Admin Cart first')}else{document.getElementById('invoiceModal').classList.add('active')}">OPEN INVOICE SYSTEM</button></div>
-  </div>`;
-}
-let UPLOADED_FILE=null; // GOD TIER FIX
-function uploadImg(e){UPLOADED_FILE=e.target.files[0];if(UPLOADED_FILE){let r=new FileReader();r.onload=ev=>{document.getElementById('imgPreview').src=ev.target.result;document.getElementById('imgPreview').style.display='block';};r.readAsDataURL(UPLOADED_FILE);}}
 
 async function addProduct(){
   let sku=document.getElementById('newSku').value.toUpperCase().trim();
@@ -273,99 +117,24 @@ async function addProduct(){
   let price=parseFloat(document.getElementById('newPrice').value);
   let stock=parseInt(document.getElementById('newStock').value);
   if(!sku||!barcode||!name||isNaN(price)||isNaN(stock))return notify('SKU, Barcode, Name, Price, Stock required');
-
-  let imgUrl='';
-  if(UPLOADED_FILE){
-    notify('Uploading image...');
-    const ref = storage.ref().child(`products/${ACTIVE_HUB}/${sku}_${Date.now()}`);
-    await ref.put(UPLOADED_FILE);
-    imgUrl = await ref.getDownloadURL();
-  }
-
-  let obj={sku,barcode,name,price,cost:parseFloat(document.getElementById('newCost').value)||0,stock,specs:document.getElementById('newSpecs').value,img:imgUrl};
-  if(ACTIVE_HUB==='scrap'){obj.vin=document.getElementById('newVin').value.toUpperCase().trim();if(!obj.vin)return notify('VIN required for Scrap');}
+  let obj={sku,barcode,name,price,cost:parseFloat(document.getElementById('newCost').value)||0,stock,specs:document.getElementById('newSpecs').value,img:UPLOAD_URL||''};
+  if(ACTIVE_HUB==='scrap'){obj.vin=document.getElementById('newVin').value.toUpperCase().trim();if(!obj.vin)return notify('VIN required for Scrap')}
   HUBS[ACTIVE_HUB].products.push(obj);
-  await saveHubs();notify('Product Added + Synced');UPLOADED_FILE=null;
+  await saveHubs();notify('Product Added + Synced');UPLOAD_URL='';
   ['newSku','newBarcode','newName','newPrice','newCost','newStock','newSpecs','newVin'].forEach(id=>{let el=document.getElementById(id); if(el)el.value='';});document.getElementById('imgPreview').style.display='none';
 }
-async function deleteProduct(i){if(!canDelete())return;if(confirm('DELETE PERMANENTLY FROM CLOUD?')){HUBS[ACTIVE_HUB].products.splice(i,1);await saveHubs();notify('Deleted from Cloud');}}
-async function adjStock(i,delta){if(!canEdit())return;HUBS[ACTIVE_HUB].products[i].stock=Math.max(0,HUBS[ACTIVE_HUB].products[i].stock+delta);await saveHubs();notify('Stock Updated');}
-async function setStock(i){if(!canEdit())return;let val=prompt('Set stock to:');let num=parseInt(val);if(!isNaN(num)){HUBS[ACTIVE_HUB].products[i].stock=num;await saveHubs();notify('Stock Set');}}
-async function editVin(i){if(ACTIVE_HUB!=='scrap'||!canEdit())return;let val=prompt('Enter VIN:',HUBS[ACTIVE_HUB].products[i].vin||'');if(val){HUBS[ACTIVE_HUB].products[i].vin=val.toUpperCase().trim();await saveHubs();notify('VIN Updated');}}
 
-function adminAddCart(sku){let x=HUBS[ACTIVE_HUB].products.find(i=>i.sku===sku);if(x.stock<=0)return notify('OUT OF STOCK');let ex=ADMIN_CART.find(i=>i.sku===sku);if(ex){ex.qty++;}else{ADMIN_CART.push({...x,qty:1});}notify(`Added ${x.name} to Admin Cart`);updateAdminCartFloat();}
-function updateAdminCartFloat(){document.getElementById('adminCartCount').textContent=ADMIN_CART.reduce((a,b)=>a+b.qty,0);document.getElementById('adminCartTotal').textContent=ADMIN_CART.reduce((a,b)=>a+b.price*b.qty,0).toFixed(2);}
-function openAdminCart(){document.getElementById('adminCartList').innerHTML=ADMIN_CART.map((i,idx)=>`<div class="row"><span>${i.name} x${i.qty}</span><button class="btn-red btn-sm" onclick="ADMIN_CART.splice(${idx},1);openAdminCart();updateAdminCartFloat()">x</button></div>`).join('')||'Cart Empty';document.getElementById('adminCartModal').classList.add('active');}
+function openPos(){CART=[];document.getElementById('posModal').style.display='flex';document.getElementById('posBarcode').focus()}
+function closePos(){document.getElementById('posModal').style.display='none'}
+function addToCart(){let code=document.getElementById('posBarcode').value.trim();let p=HUBS[ACTIVE_HUB].products.find(x=>x.barcode===code);if(!p)return notify('Not found');let c=CART.find(x=>x.barcode===code);if(c)c.qty++;else CART.push({...p,qty:1});document.getElementById('posBarcode').value='';renderCart()}
+function renderCart(){let html=CART.map((c,i)=>`<div>${c.name} x${c.qty} R${c.price*c.qty} <button onclick="CART.splice(${i},1);renderCart()">X</button></div>`).join('');document.getElementById('posCart').innerHTML=html;document.getElementById('posTotal').innerText='Total: R'+CART.reduce((a,b)=>a+b.price*b.qty,0)}
+async function checkout(){if(!CART.length)return notify('Cart empty');CART.forEach(c=>{let p=HUBS[ACTIVE_HUB].products.find(x=>x.barcode===c.barcode);if(p)p.stock-=c.qty});await saveHubs();let el=document.createElement('div');el.innerHTML=`<h1>Invoice</h1>${CART.map(c=>`<div>${c.name} x${c.qty} R${c.price*c.qty}</div>`).join('')}<h2>Total R${CART.reduce((a,b)=>a+b.price*b.qty,0)}</h2>`;html2pdf().from(el).save('invoice.pdf');CART=[];renderCart();closePos();notify('Sale done')}
 
-function renderClientHubs(){
-  if(!document.getElementById('clientHubTabs')||!HUBS)return;
-  document.getElementById('clientHubTabs').innerHTML = Object.keys(HUBS).map(k=>`<div class="hub-btn ${k===ACTIVE_HUB?'active':''}" onclick="switchClientHub('${k}')">${HUBS[k].name.split('|')[0]}</div>`).join('');
-  renderClientView();
-}
-function switchClientHub(h){ACTIVE_HUB=h;renderClientHubs();}
-function renderClientView(){
-  if(!HUBS[ACTIVE_HUB])return;
-  let h=HUBS[ACTIVE_HUB], p=h.products;
-  document.getElementById('clientHubViews').innerHTML = `
-  <div class="hub-view active">
-    <div class="card"><h3>${h.name.split('|')[0]}</h3><small>${h.name.split('|')[1]||''}</small>
-      <div class="product-grid">${p.map(x=>`<div class="prod" onclick="clientAdd('${x.sku}')"><img src="${x.img||''}"><div class="prod-body">${x.name}<br><b>R${x.price}</b><br><small>Stock:${x.stock}</small><br><small>BC:${x.barcode||'N/A'}</small><br><span class="badge">${x.specs}</span>${ACTIVE_HUB==='scrap'?`<br><small>VIN: ${x.vin||'N/A'}</small>`:''}</div></div>`).join('')}</div>
-    </div>
-  </div>`;
-  updateCartFloat();
-}
-function clientAdd(sku){let x=HUBS[ACTIVE_HUB].products.find(i=>i.sku===sku);if(x.stock<=0)return notify('OUT OF STOCK');if(x.alcohol){PENDING_ALCOHOL=x;document.getElementById('ageModal').classList.add('active');return;}let ex=CART.find(i=>i.sku===sku);if(ex){ex.qty++;}else{CART.push({...x,qty:1});}notify(`Added ${x.name}`);updateCartFloat();}
-function ageConfirm(ok){closeModal('ageModal');if(ok){let x=PENDING_ALCOHOL;let ex=CART.find(i=>i.sku===x.sku);if(ex){ex.qty++;}else{CART.push({...x,qty:1});}notify(`Added ${x.name} 18+`);updateCartFloat();}PENDING_ALCOHOL=null;}
-function updateCartFloat(){if(document.getElementById('cartCount')){document.getElementById('cartCount').textContent=CART.reduce((a,b)=>a+b.qty,0);document.getElementById('cartTotal').textContent=CART.reduce((a,b)=>a+b.price*b.qty,0).toFixed(2);}}
-function openClientCart(){document.getElementById('clientCartList').innerHTML=CART.map((i,idx)=>`<div class="row"><span>${i.name} x${i.qty}</span><button class="btn-red btn-sm" onclick="CART.splice(${idx},1);openClientCart();updateCartFloat()">x</button></div>`).join('')||'Cart Empty';document.getElementById('clientCartModal').classList.add('active');}
-function openClientInvoice(){if(CART.length===0)return notify('Cart is empty');let subtotal=CART.reduce((a,b)=>a+b.price*b.qty,0);let vat=subtotal*0.15;let total=subtotal+vat;let msg=`Hi SparesHub, Quote Request:\n${CART.map(i=>`${i.name} x${i.qty} = R${(i.price*i.qty).toFixed(2)}`).join('\n')}\n\nSubtotal: R${subtotal.toFixed(2)}\nVAT 15%: R${vat.toFixed(2)}\nTotal: R${total.toFixed(2)}`;window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`,'_blank');}
+function openStock(){let html=HUBS[ACTIVE_HUB].products.map((p,i)=>`<div class="flex justify-between border-b py-1"><div>${p.name} Stock:${p.stock}</div><div><input type="number" id="s${i}" value="${p.stock}" style="width:80px"><button class="btn btn-primary text-xs ml-1" onclick="updStock(${i})">Save</button></div></div>`).join('');document.getElementById('stockList').innerHTML=html||'No products';document.getElementById('stockModal').style.display='flex'}
+function closeStock(){document.getElementById('stockModal').style.display='none'}
+async function updStock(i){HUBS[ACTIVE_HUB].products[i].stock=parseInt(document.getElementById('s'+i).value);await saveHubs();notify('Stock updated');openStock()}
 
-async function saveInvoice(){
-  let activeCart = IS_CLIENT? CART : ADMIN_CART;
-  if(activeCart.length===0)return notify('Cart is empty');
-  const client=document.getElementById('invClient').value.trim();
-  const phone=document.getElementById('invPhone').value.trim();
-  const addr=document.getElementById('invAddr').value.trim();
-  if(!client||!phone||!addr)return notify('Fill all client fields');
-
-  const doc=new jsPDF();
-  const comp=document.getElementById('invCompany').value||'SparesHub Pty Ltd';
-  const reg=document.getElementById('invReg').value||'VAT: 4123456789';
-  const invNo='INV'+Date.now();
-  const subtotal=activeCart.reduce((a,b)=>a+b.price*b.qty,0);
-  const vat=subtotal*0.15; const total=subtotal+vat; const profit=activeCart.reduce((a,b)=>(b.price-b.cost)*b.qty,0);
-
-  doc.setFontSize(18);doc.text(comp,14,20);
-  doc.setFontSize(10);doc.text(reg,14,27);doc.text('INVOICE: '+invNo,140,20);doc.text(new Date().toLocaleDateString(),140,27);
-  doc.text('BILL TO:',14,40);doc.text(client,14,46);doc.text(phone,14,52);doc.text(addr,14,58);
-  let y=75;doc.text('ITEM',14,y);doc.text('QTY',90,y);doc.text('PRICE',120,y);doc.text('TOTAL',160,y);y+=8;
-  activeCart.forEach(i=>{doc.text(i.name.substring(0,25),14,y);doc.text(i.qty.toString(),90,y);doc.text('R'+i.price,120,y);doc.text('R'+(i.price*i.qty).toFixed(2),160,y);y+=7;});
-  y+=5;doc.text('Subtotal: R'+subtotal.toFixed(2),140,y);y+=7;doc.text('VAT 15%: R'+vat.toFixed(2),140,y);y+=7;doc.setFontSize(12);doc.text('TOTAL: R'+total.toFixed(2),140,y);
-  y+=15;doc.setFontSize(8);doc.text('Terms: E&OE. Payment 7 Days. Goods remain property until paid.',14,y);
-  doc.text('Served by: '+CURRENT_USER.name,14,y+10);
-
-  document.getElementById('qrcanvas').innerHTML='';
-  new QRCode(document.getElementById('qrcanvas'), {text:invNo+'|R'+total.toFixed(2),width:64,height:64});
-  const qr=document.getElementById('qrcanvas').querySelector('img').src;
-  doc.addImage(qr,'PNG',140,y+5,30,30);
-
-  doc.save(invNo+'.pdf');
-  notify('PDF Generated');
-  closeModal('invoiceModal');
-  
-  SALES_LOG.push({date:new Date().toISOString(),inv:invNo,total:total,profit:profit,user:CURRENT_USER.name,items:activeCart.map(i=>({name:i.name,qty:i.qty})),topItem:activeCart.reduce((a,b)=>a.qty>b.qty?a:b).name});
-  await saveSales();
-
-  activeCart.forEach(item=>{
-    let prod = Object.values(HUBS).flatMap(h=>h.products).find(p=>p.sku===item.sku);
-    if(prod){prod.stock=Math.max(0,prod.stock-item.qty);}
-  });
-  await saveHubs();
-
-  activeCart.length=0; updateCartFloat(); updateAdminCartFloat();
-}
-
-renderPin();
+async function exportAll(){let zip=new JSZip();Object.keys(HUBS).forEach(h=>{let ws=XLSX.utils.json_to_sheet(HUBS[h].products);let wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Products');zip.file(h+'.xlsx',XLSX.write(wb,{type:'array'}))});zip.generateAsync({type:'blob'}).then(b=>saveAs(b,'OMNI_HUB.zip'));notify('Exported')}
 </script>
 </body>
 </html>
