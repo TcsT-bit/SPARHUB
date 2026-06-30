@@ -107,7 +107,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid
 </div>
 
 <script>
-const { jsPDF } = window.jspdf;
+ { jsPDF } = window.jspdf;
 const IS_CLIENT = location.search.includes('client');
 const WHATSAPP_NUMBER = '27698949596';
 const LOW_STOCK_LIMIT = 10;
@@ -256,6 +256,138 @@ function renderAdminView(){
       <hr style="margin:12px 0">
       ${canEdit()?`<h4>+ ADD PRODUCT [GOD TIER UPLOAD IMAGE]</h4>
       <input id="newSku" placeholder="SKU*"><input id="newBarcode" placeholder="Barcode/EAN*">
+<script>
+const { jsPDF } = window.jspdf;
+const IS_CLIENT = false; // GOD MODE: Force Admin ON. Client link disabled.
+const WHATSAPP_NUMBER = '27698949596';
+const LOW_STOCK_LIMIT = 10;
+let DEFERRED_PROMPT = null;
+
+const USERS = {
+  '1234':{name:'CEO',role:'owner'} // PIN GONE
+};
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDU3m6DUDpXugBs-PW4Aqn_WvbbHbGq6mg",
+    authDomain: "omega---dms.firebaseapp.com",
+    projectId: "omega---dms",
+    storageBucket: "omega---dms.firebasestorage.app",
+    messagingSenderId: "194803652821",
+    appId: "1:194803652821:web:07c6dc73aba1ce681a2a5c"
+  };
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let CURRENT_USER={name:'CEO',role:'owner'}, CURRENT_ROLE='owner', ACTIVE_HUB='bricks', CART=[], ADMIN_CART=[], PENDING_ALCOHOL=null, HUBS={}, SALES_LOG=[], HTML5QrCode=null; // AUTO ADMIN
+
+const DEFAULT_HUBS = {
+  bricks:{name:'🧱 Bricks | Builders OS', kpis:{moq:'1000',delivery:'48H',credit:'30'}, products:[{sku:'B6',barcode:'6001234567890',name:'6" Brick NFX',price:3.20,stock:500,cost:2.10,img:'https://images.unsplash.com/photo-1591088398332-8a7791972843?w=300',specs:'14Mpa, SABS 227'}]},
+  tavern:{name:'🍺 Tavern | Makro Liquor OS', kpis:{license:'RICA',cold:'-4C',pos:'Scan'}, products:[{sku:'BEER',barcode:'6001234567891',name:'Castle Lager 500ml',price:22,stock:100,cost:15,alcohol:true,img:'https://images.unsplash.com/photo-1608270586620-57bd79aacb6d?w=300',specs:'18+ ID Scan Required'}]},
+  water:{name:'💧 Water | Aqua Pure OS', kpis:{ppm:'<50',test:'SABS',route:'GPS'}, products:[{sku:'WATER25',barcode:'6001234567892',name:'Purified Water 25L',price:35,stock:50,cost:20,img:'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300',specs:'SABS 241, RO Filtered'}]},
+  diesel:{name:'⛽ Diesel | Sasol OS', kpis:{octane:'50ppm',tank:'10K L',card:'Fleet'}, products:[{sku:'DSL',barcode:'6001234567893',name:'Diesel 50ppm /L',price:24.50,stock:5000,cost:22,img:'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=300',specs:'DOP Approved'}]},
+  sand:{name:'🏜️ Sand | Afrimat OS', kpis:{grade:'River',ton:'1.4T',site:'Delivery'}, products:[{sku:'RIVER',barcode:'6001234567894',name:'River Sand /m³',price:450,stock:100,cost:300,img:'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=300',specs:'SABS, Washed'}]},
+  chickens:{name:'🐔 Chickens | Astral OS', kpis:{biosec:'Level 2',weight:'1.8kg',halal:'Halaal'}, products:[{sku:'CHICK',barcode:'6001234567895',name:'Live Broiler /kg',price:28,stock:100,cost:20,img:'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=300',specs:'Halaal'}]},
+  scrap:{name:'🔩 Scrap | BMW OS', kpis:{cat:'A/B/C',yard:'GPS'}, products:[{sku:'TYRE15',barcode:'6001234567896',name:'VW Polo Tyre 15"',price:350,stock:12,cost:200,img:'https://images.unsplash.com/photo-1486262710619-324dbdee2a17?w=300',specs:'DOT 2023'}]},
+  transport:{name:'🚌 Transport | Greyhound OS', kpis:{gps:'Live',seats:'56',card:'Book'}, products:[{sku:'JHB',barcode:'6001234567897',name:'Polokwane-JHB Seat',price:80,stock:20,cost:50,img:'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=300',specs:'Leather'}]},
+  restaurant:{name:'🍔 Restaurant | Nandos OS', kpis:{pos:'Kitchen',prep:'8min',loyal:'App'}, products:[{sku:'BURGER',barcode:'6001234567898',name:'Chicken Burger',price:55,stock:0,cost:30,img:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300',specs:'Halal'}]}
+};
+
+function notify(msg){let n=document.getElementById('notification');n.textContent=msg;n.style.display='block';setTimeout(()=>n.style.display='none',2500);}
+function closeModal(id){document.getElementById(id).classList.remove('active'); if(HTML5QrCode){HTML5QrCode.stop();}}
+function copyLink(){navigator.clipboard.writeText(document.getElementById('clientLink').value);notify('Link Copied');}
+
+window.addEventListener('beforeinstallprompt', (e) => {e.preventDefault(); DEFERRED_PROMPT = e;});
+function installApp(){if(DEFERRED_PROMPT){DEFERRED_PROMPT.prompt(); DEFERRED_PROMPT.userChoice.then(()=>{document.getElementById('installBtn').style.display='none';});}}
+
+// PWA SW REGISTER = LEGIT
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
+
+// LOGIN DELETED. ALL FUNCTIONS GONE.
+
+async function loadHubs(){
+  try{
+    const doc = await db.collection('omnihub').doc('hubs').get();
+    if(doc.exists){HUBS=doc.data();}else{HUBS=DEFAULT_HUBS;await db.collection('omnihub').doc('hubs').set(HUBS);}
+    const salesDoc = await db.collection('omnihub').doc('sales').get();
+    if(salesDoc.exists){SALES_LOG=salesDoc.data().log||[];}
+  }catch(e){console.error('FIRESTORE LOAD ERROR:',e);notify('DB Error: Check Rules');HUBS=DEFAULT_HUBS;}
+  checkLowStock(); renderDashboard(); renderAdminHubs();
+}
+async function saveHubs(){try{await db.collection('omnihub').doc('hubs').set(HUBS); checkLowStock();}catch(e){console.error('FIRESTORE SAVE ERROR:',e);notify('Save Failed: DB too big or Rules');}}
+async function saveSales(){await db.collection('omnihub').doc('sales').set({log:SALES_LOG}); renderDashboard();}
+
+function init(){
+  document.getElementById('loginScreen').remove(); // DELETE PIN SCREEN FROM DOM
+  document.getElementById('adminApp').classList.remove('hidden'); // SHOW ADMIN INSTANT
+  document.getElementById('clientApp').remove(); // DELETE CLIENT APP FROM DOM
+  document.getElementById('userName').textContent='CEO';
+  document.getElementById('roleBadge').textContent='OWNER';
+  document.getElementById('clientLink').value = location.origin + location.pathname; // CLEAN LINK ONLY
+  loadHubs();
+  db.collection('omnihub').doc('hubs').onSnapshot(loadHubs);
+  db.collection('omnihub').doc('sales').onSnapshot(loadHubs);
+}
+function logout(){location.reload();} // NO SEARCH PARAMS ANYMORE
+
+function canDelete(){return true;} // ALL PERMISSIONS
+function canEdit(){return true;} // ALL PERMISSIONS
+
+function renderDashboard(){
+  let today = new Date().toDateString();
+  let todaySales = SALES_LOG.filter(s=>new Date(s.date).toDateString()===today);
+  let totalSales = todaySales.reduce((a,b)=>a+b.total,0);
+  let totalProfit = todaySales.reduce((a,b)=>a+b.profit,0);
+  let top = todaySales.length?todaySales.reduce((a,b)=>a.qty>b.qty?a:b):{name:'N/A',qty:0};
+  let lowCount = Object.values(HUBS).flatMap(h=>h.products).filter(p=>p.stock<LOW_STOCK_LIMIT).length;
+  document.getElementById('dashboard').innerHTML = `
+    <div class="kpi-box"><small>SALES TODAY</small><br><b>R${totalSales.toFixed(2)}</b></div>
+    <div class="kpi-box"><small>PROFIT</small><br><b>R${totalProfit.toFixed(2)}</b></div>
+    <div class="kpi-box"><small>TOP ITEM</small><br><b>${top.name}</b></div>
+    <div class="kpi-box"><small>LOW STOCK</small><br><b>${lowCount}</b></div>
+  `;
+}
+
+function checkLowStock(){
+  let low = Object.entries(HUBS).flatMap(([hubKey,h])=>h.products.filter(p=>p.stock<LOW_STOCK_LIMIT).map(p=>`${h.name.split('|')[0]}: ${p.name} ${p.stock}`));
+  let alertDiv = document.getElementById('lowStockAlert');
+  if(low.length>0){
+    alertDiv.innerHTML = `<div class="alert">⚠️ LOW STOCK ALERT: ${low.join(', ')}</div>`;
+    if(!sessionStorage.getItem('alertSent')){
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('LOW STOCK ALERT: '+low.join(', '))}`,'_blank');
+      sessionStorage.setItem('alertSent','1');
+    }
+  }else{alertDiv.innerHTML=''; sessionStorage.removeItem('alertSent');}
+}
+
+function startScanner(){document.getElementById('scannerModal').classList.add('active'); HTML5QrCode = new Html5Qrcode("reader"); HTML5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);}
+function stopScanner(){closeModal('scannerModal');}
+function onScanSuccess(code){stopScanner(); let p = Object.values(HUBS).flatMap(h=>h.products).find(x=>x.barcode===code); if(p){adminAddCart(p.sku); notify(`Scanned: ${p.name}`);} else{notify('Barcode not found');}}
+
+function renderAdminHubs(){
+  document.getElementById('hubTabs').innerHTML = Object.keys(HUBS).map(k=>`<div class="hub-btn ${k===ACTIVE_HUB?'active':''}" onclick="switchAdminHub('${k}')">${HUBS[k].name}</div>`).join('');
+  renderAdminView();
+}
+function switchAdminHub(h){ACTIVE_HUB=h;renderAdminHubs();}
+function renderAdminView(){
+  let h=HUBS[ACTIVE_HUB], p=h.products;
+  document.getElementById('hubViews').innerHTML = `
+  <div class="hub-view active">
+    <div class="card"><h3>${h.name}</h3><div class="kpi">${Object.entries(h.kpis).map(([k,v])=>`<div class="kpi-box"><small>${k.toUpperCase()}</small><br><b>${v}</b></div>`).join('')}</div></div>
+    <div class="card"><h4>📦 INVENTORY [LIVE]</h4>
+      <div class="product-grid">${p.map((x,i)=>`<div class="prod">
+        <button class="delete-x" onclick="deleteProduct(${i})">X</button>
+        <img src="${x.img||''}"><div class="prod-body">${x.name}<br>R${x.price}<br><small>Stock:${x.stock}</small><br><small>BC:${x.barcode||'N/A'}</small><br><span class="badge">${x.specs}</span>
+        <div class="stock-controls">
+          <button class="btn-sm btn-orange" onclick="adjStock(${i},-1)">-1</button>
+          <button class="btn-sm btn-blue" onclick="adjStock(${i},1)">+1</button>
+          <button class="btn-sm btn-purple" onclick="setStock(${i})">SET</button>
+          <button class="btn-sm btn-blue" onclick="adminAddCart('${x.sku}')">+CART</button>
+        </div>
+        </div></div>`).join('')}</div>
+      <hr style="margin:12px 0">
+      <h4>+ ADD PRODUCT [GOD TIER UPLOAD IMAGE]</h4>
+      <input id="newSku" placeholder="SKU*"><input id="newBarcode" placeholder="Barcode/EAN*">
       <input id="newName" placeholder="Name*"><input id="newPrice" type="number" placeholder="Price*">
       <input id="newCost" type="number" placeholder="Cost"><input id="newStock" type="number" placeholder="Stock*" value="0">
       <input id="newSpecs" placeholder="Specs/SABS/Grade">
@@ -266,7 +398,7 @@ function renderAdminView(){
         <button class="btn-sm btn-gold" onclick="pasteLink()" style="flex:0 0 auto">📋 PASTE</button>
       </div>
       <img id="imgPreview" style="width:100%;max-height:120px;object-fit:cover;display:none;margin-top:8px">
-      <button class="btn btn-purple" onclick="addProduct()">SAVE PRODUCT</button>`:''}
+      <button class="btn btn-purple" onclick="addProduct()">SAVE PRODUCT</button>
     </div>
     <div class="card"><h4>🧾 CREATE INVOICE</h4><button class="btn btn-gold" onclick="if(ADMIN_CART.length===0){notify('Add items to Admin Cart first')}else{document.getElementById('invoiceModal').classList.add('active')}">OPEN INVOICE SYSTEM</button></div>
   </div>`;
@@ -280,7 +412,7 @@ async function pasteLink(){
       previewUrl(text);
       notify('Link Pasted ✅');
     }else{
-      notify('No Catbox link in clipboard');} 
+      notify('No Catbox link in clipboard');
     }
   }catch(e){notify('Clipboard denied. Tap + Hold > Paste.');}
 function previewUrl(url){if(url.startsWith('http')){document.getElementById('imgPreview').src=url;document.getElementById('imgPreview').style.display='block';}else{document.getElementById('imgPreview').style.display='none';}}
@@ -299,39 +431,18 @@ async function addProduct(){
   await saveHubs();notify('Product Added + Synced');
   ['newSku','newBarcode','newName','newPrice','newCost','newStock','newSpecs','newImgUrl'].forEach(id=>{let el=document.getElementById(id); if(el)el.value='';});document.getElementById('imgPreview').style.display='none';
 }
-async function deleteProduct(i){if(!canDelete())return;if(confirm('DELETE PERMANENTLY FROM CLOUD?')){HUBS[ACTIVE_HUB].products.splice(i,1);await saveHubs();notify('Deleted from Cloud');}}
-async function adjStock(i,delta){if(!canEdit())return;HUBS[ACTIVE_HUB].products[i].stock=Math.max(0,HUBS[ACTIVE_HUB].products[i].stock+delta);await saveHubs();notify('Stock Updated');}
-async function setStock(i){if(!canEdit())return;let val=prompt('Set stock to:');let num=parseInt(val);if(!isNaN(num)){HUBS[ACTIVE_HUB].products[i].stock=num;await saveHubs();notify('Stock Set');}}
+async function deleteProduct(i){if(confirm('DELETE PERMANENTLY FROM CLOUD?')){HUBS[ACTIVE_HUB].products.splice(i,1);await saveHubs();notify('Deleted from Cloud');}}
+async function adjStock(i,delta){HUBS[ACTIVE_HUB].products[i].stock=Math.max(0,HUBS[ACTIVE_HUB].products[i].stock+delta);await saveHubs();notify('Stock Updated');}
+async function setStock(i){let val=prompt('Set stock to:');let num=parseInt(val);if(!isNaN(num)){HUBS[ACTIVE_HUB].products[i].stock=num;await saveHubs();notify('Stock Set');}}
 
 function adminAddCart(sku){let x=HUBS[ACTIVE_HUB].products.find(i=>i.sku===sku);if(x.stock<=0)return notify('OUT OF STOCK');let ex=ADMIN_CART.find(i=>i.sku===sku);if(ex){ex.qty++;}else{ADMIN_CART.push({...x,qty:1});}notify(`Added ${x.name} to Admin Cart`);updateAdminCartFloat();}
 function updateAdminCartFloat(){document.getElementById('adminCartCount').textContent=ADMIN_CART.reduce((a,b)=>a+b.qty,0);document.getElementById('adminCartTotal').textContent=ADMIN_CART.reduce((a,b)=>a+b.price*b.qty,0).toFixed(2);}
 function openAdminCart(){document.getElementById('adminCartList').innerHTML=ADMIN_CART.map((i,idx)=>`<div class="row"><span>${i.name} x${i.qty}</span><button class="btn-red btn-sm" onclick="ADMIN_CART.splice(${idx},1);openAdminCart();updateAdminCartFloat()">x</button></div>`).join('')||'Cart Empty';document.getElementById('adminCartModal').classList.add('active');}
 
-function renderClientHubs(){
-  if(!document.getElementById('clientHubTabs')||!HUBS)return;
-  document.getElementById('clientHubTabs').innerHTML = Object.keys(HUBS).map(k=>`<div class="hub-btn ${k===ACTIVE_HUB?'active':''}" onclick="switchClientHub('${k}')">${HUBS[k].name.split('|')[0]}</div>`).join('');
-  renderClientView();
-}
-function switchClientHub(h){ACTIVE_HUB=h;renderClientHubs();}
-function renderClientView(){
-  if(!HUBS[ACTIVE_HUB])return;
-  let h=HUBS[ACTIVE_HUB], p=h.products;
-  document.getElementById('clientHubViews').innerHTML = `
-  <div class="hub-view active">
-    <div class="card"><h3>${h.name.split('|')[0]}</h3><small>${h.name.split('|')[1]||''}</small>
-      <div class="product-grid">${p.map(x=>`<div class="prod" onclick="clientAdd('${x.sku}')"><img src="${x.img||''}"><div class="prod-body">${x.name}<br><b>R${x.price}</b><br><small>Stock:${x.stock}</small><br><small>BC:${x.barcode||'N/A'}</small><br><span class="badge">${x.specs}</span></div></div>`).join('')}</div> // VIN REMOVED
-    </div>
-  </div>`;
-  updateCartFloat();
-}
-function clientAdd(sku){let x=HUBS[ACTIVE_HUB].products.find(i=>i.sku===sku);if(x.stock<=0)return notify('OUT OF STOCK');if(x.alcohol){PENDING_ALCOHOL=x;document.getElementById('ageModal').classList.add('active');return;}let ex=CART.find(i=>i.sku===sku);if(ex){ex.qty++;}else{CART.push({...x,qty:1});}notify(`Added ${x.name}`);updateCartFloat();}
-function ageConfirm(ok){closeModal('ageModal');if(ok){let x=PENDING_ALCOHOL;let ex=CART.find(i=>i.sku===x.sku);if(ex){ex.qty++;}else{CART.push({...x,qty:1});}notify(`Added ${x.name} 18+`);updateCartFloat();}PENDING_ALCOHOL=null;}
-function updateCartFloat(){if(document.getElementById('cartCount')){document.getElementById('cartCount').textContent=CART.reduce((a,b)=>a+b.qty,0);document.getElementById('cartTotal').textContent=CART.reduce((a,b)=>a+b.price*b.qty,0).toFixed(2);}}
-function openClientCart(){document.getElementById('clientCartList').innerHTML=CART.map((i,idx)=>`<div class="row"><span>${i.name} x${i.qty}</span><button class="btn-red btn-sm" onclick="CART.splice(${idx},1);openClientCart();updateCartFloat()">x</button></div>`).join('')||'Cart Empty';document.getElementById('clientCartModal').classList.add('active');}
-function openClientInvoice(){if(CART.length===0)return notify('Cart is empty');let subtotal=CART.reduce((a,b)=>a+b.price*b.qty,0);let vat=subtotal*0.15;let total=subtotal+vat;let msg=`Hi SparesHub, Quote Request:\n${CART.map(i=>`${i.name} x${i.qty} = R${(i.price*i.qty).toFixed(2)}`).join('\n')}\n\nSubtotal: R${subtotal.toFixed(2)}\nVAT 15%: R${vat.toFixed(2)}\nTotal: R${total.toFixed(2)}`;window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`,'_blank');}
+// CLIENT FUNCTIONS DELETED
 
 async function saveInvoice(){
-  let activeCart = IS_CLIENT? CART : ADMIN_CART;
+  let activeCart = ADMIN_CART;
   if(activeCart.length===0)return notify('Cart is empty');
   const client=document.getElementById('invClient').value.trim();
   const phone=document.getElementById('invPhone').value.trim();
@@ -362,7 +473,7 @@ async function saveInvoice(){
   doc.save(invNo+'.pdf');
   notify('PDF Generated');
   closeModal('invoiceModal');
-  
+
   SALES_LOG.push({date:new Date().toISOString(),inv:invNo,total:total,profit:profit,user:CURRENT_USER.name,items:activeCart.map(i=>({name:i.name,qty:i.qty})),topItem:activeCart.reduce((a,b)=>a.qty>b.qty?a:b).name});
   await saveSales();
 
@@ -372,11 +483,10 @@ async function saveInvoice(){
   });
   await saveHubs();
 
-  activeCart.length=0; updateCartFloat(); updateAdminCartFloat();
+  activeCart.length=0; updateAdminCartFloat();
 }
 
-renderPin();
-init(); // GOD TIER: BOOT THE APP. DECIDE ADMIN VS CLIENT NOW.
+init(); // GOD MODE: BOOT STRAIGHT TO ADMIN
 </script>
 </body>
 </html>
